@@ -51,6 +51,7 @@ jobs:
           node adaptive-policy-test.js
           node policy-outcome-test.js
           node pwa-cache-test.js
+          node cross-origin-isolation-test.js
           node http-smoke-test.js
           node speaking-listening-test.js
           node neural-voice-test.js
