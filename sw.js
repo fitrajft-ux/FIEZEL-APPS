@@ -7,7 +7,7 @@ const CACHE=`fiezel-v${self.FIEZEL_VERSION}`;
 // JANGAN naikkan version.js bersamaan: nama CACHE terikat ke FIEZEL_VERSION, dan
 // activate menghapus semua cache fiezel-* yang bukan CACHE -- termasuk 113 MB aset
 // neural voice yang menumpang di cache yang sama.
-const SW_REV='m025-3-neural-stage-probe-20260816-1';
+const SW_REV='m025-4-neural-stage-probe-20260816-1';
 const ASSETS=['./','./index.html','./style.css','./version.js','./report-config.js','./core-config.js','./content-canary.js','./content-promotion.js','./content-canary-config.js','./lucide.min.js','./app.js','./validator.js','./manifest.json','./vocabulary-master.json','./reading-bank.json','./grammar-templates.json','./favicon-64.png','./apple-touch-icon.png','./instagram.svg','./creator-report-setup.html','./creator-report-dashboard.html','./fiezel-report-worker.js','./features/neural-voice/fiezel-neural-voice-config.js','./features/neural-voice/fiezel-kokoro-adapter.js','./features/neural-voice/fiezel-neural-voice.js','./features/neural-voice/fiezel-web-audio-player.js','./features/neural-voice/fiezel-neural-voice-bootstrap.js','./features/neural-voice/fiezel-neural-voice-ios-cache-fix.js','./features/neural-voice/fiezel-neural-voice-audibility-fix.js','./features/neural-voice/fiezel-diag-panel.js','./features/speaking-listening/speaking-listening-config.js','./features/speaking-listening/fiezel-speaking-listening-addon.js','./features/speaking-listening/speaking-listening-addon.css','./features/speaking-listening/listening-bank-v1.json','./features/speaking-listening/speaking-bank-v1.json'];
 const isNeuralAsset=request=>new URL(request.url).pathname.includes('/vendor/kokoro-');
 

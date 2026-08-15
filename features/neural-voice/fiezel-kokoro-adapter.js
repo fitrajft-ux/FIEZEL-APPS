@@ -86,9 +86,11 @@
     }
 
     function instrumentInstance(tts) {
-      if (!tts || tts.__fiezelStageProbeV1) return tts;
+      if (!tts || tts.__fiezelStageProbeV2) return tts;
       let tokenizer = false;
       let model = false;
+      let voice = false;
+      let generateFromIds = false;
 
       if (typeof Proxy === 'function' && typeof tts.tokenizer === 'function') {
         const originalTokenizer = tts.tokenizer;
@@ -135,8 +137,64 @@
         model = true;
       }
 
-      try { Object.defineProperty(tts, '__fiezelStageProbeV1', { value: true, configurable: false }); } catch (_) {}
-      stage('adapter_stage_probe_ready', { tokenizer, model });
+      // m025-4 pre-tokenizer boundary: _validate_voice is the only pre-tokenizer
+      // callable reachable on the instance besides the tokenizer. The phonemizer
+      // step between voice selection and the tokenizer is a vendored module-level
+      // call that is NOT callable on the instance, so it is deliberately left
+      // unobserved instead of emitting an unobservable stage.
+      if (typeof Proxy === 'function' && typeof tts._validate_voice === 'function') {
+        const originalVoice = tts._validate_voice;
+        tts._validate_voice = new Proxy(originalVoice, {
+          apply(target, thisArg, args) {
+            const startedAt = Date.now();
+            stage('adapter_pretoken_voice_enter');
+            try {
+              const value = Reflect.apply(target, thisArg, args);
+              stage('adapter_pretoken_voice_resolved', { elapsedMs: Date.now() - startedAt });
+              return value;
+            } catch (error) {
+              stage('adapter_pretoken_voice_error', { elapsedMs: Date.now() - startedAt, errorKind: errorKind(error) });
+              throw error;
+            }
+          }
+        });
+        voice = true;
+      }
+
+      // m025-4 voice-cache boundary: generate_from_ids is the post-tokenizer
+      // callable that performs the voice-embedding/voice-cache load before the
+      // model call. Its pre-model window (enter -> model_enter via the probe
+      // below) isolates that I/O while the model probe keeps model execution
+      // separate; the same callable is not a phoneme/text boundary, so no
+      // prompt or phoneme content can be observed here.
+      if (typeof Proxy === 'function' && typeof tts.generate_from_ids === 'function') {
+        const originalFromIds = tts.generate_from_ids;
+        tts.generate_from_ids = new Proxy(originalFromIds, {
+          apply(target, thisArg, args) {
+            const startedAt = Date.now();
+            stage('adapter_generate_from_ids_enter');
+            let result;
+            try {
+              result = Reflect.apply(target, thisArg, args);
+              stage('adapter_generate_from_ids_dispatched', { elapsedMs: Date.now() - startedAt });
+            } catch (error) {
+              stage('adapter_generate_from_ids_error', { elapsedMs: Date.now() - startedAt, errorKind: errorKind(error) });
+              throw error;
+            }
+            return Promise.resolve(result).then((value) => {
+              stage('adapter_generate_from_ids_resolved', { elapsedMs: Date.now() - startedAt });
+              return value;
+            }, (error) => {
+              stage('adapter_generate_from_ids_error', { elapsedMs: Date.now() - startedAt, errorKind: errorKind(error) });
+              throw error;
+            });
+          }
+        });
+        generateFromIds = true;
+      }
+
+      try { Object.defineProperty(tts, '__fiezelStageProbeV2', { value: true, configurable: false }); } catch (_) {}
+      stage('adapter_stage_probe_ready', { tokenizer, model, voice, generateFromIds });
       return tts;
     }
 
