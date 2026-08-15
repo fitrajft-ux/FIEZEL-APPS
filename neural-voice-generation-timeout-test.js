@@ -46,6 +46,27 @@ function config(){return{voices:{fiezelPrimary:'af_heart'},limits:{maxInputChars
 
   {
     const env=makeEnv();
+    let playCalls=0;
+    const adapter={kind:'neural-test',generate:async()=>{await sleep(55);return{data:new Float32Array([0,.1]),sampling_rate:24000}}};
+    const service=core.createVoiceService({
+      config:config(),adapter,env,generationTimeoutMs:20,
+      playAudio:async()=>{playCalls++;return{done:Promise.resolve(),stop(){}}}
+    });
+    const outcome=await service.speak('late generation',{allowFallback:false})
+      .then(()=>({kind:'resolved'}))
+      .catch(error=>({kind:'rejected',error}));
+    assert.equal(outcome.kind,'rejected','late generation must still reject at the timeout boundary');
+    assert.match(String(outcome.error&&outcome.error.message||outcome.error),/neural_generation_timeout/);
+    await sleep(70);
+    const log=diagnostics(env);
+    assert.equal(playCalls,0,'late adapter resolution must never start playback');
+    assert.ok(log.some(x=>x.phase==='generate_timeout'),'late request must record generate_timeout');
+    assert.ok(!log.some(x=>x.phase==='generate_ready'),'late adapter resolution must not emit generate_ready after timeout');
+    assert.ok(!log.some(x=>x.phase==='playback_start'),'late adapter resolution must not emit playback_start after timeout');
+  }
+
+  {
+    const env=makeEnv();
     const adapter={kind:'neural-test',generate:async()=>({data:new Float32Array([0]),sampling_rate:24000})};
     const service=core.createVoiceService({config:config(),adapter,env,generationTimeoutMs:20,playAudio:async()=>{throw new Error('playback_failed')}});
     await assert.rejects(()=>service.speak('hello',{allowFallback:false}),/playback_failed/);

@@ -64,7 +64,7 @@
       appVersion: safe(function(){ return String(root.FIEZEL_VERSION || '(tidak ada)'); }),
       capturedAt: new Date().toISOString(),
       origin: safe(function(){ return location.origin; }),
-      href: safe(function(){ return location.href; }),
+      href: safe(function(){ return String(location.origin || '') + String(location.pathname || ''); }),
       standalone: safe(function(){
         return (root.navigator && root.navigator.standalone === true) ||
                !!(root.matchMedia && root.matchMedia('(display-mode: standalone)').matches);
