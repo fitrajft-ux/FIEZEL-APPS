@@ -1,0 +1,53 @@
+/* FIEZEL Home redesign progressive enhancement — issue #44 */
+.home-redesign-nav .bottomnav{grid-template-columns:repeat(6,minmax(0,1fr))}
+.home-redesign-active .launcher-actions{align-items:flex-start}
+.home-redesign-active .launcher-actions .home-secondary-ai{
+  width:auto!important;padding:7px 2px;border:0!important;background:transparent!important;
+  box-shadow:none!important;color:#d7d9e6;text-decoration:underline;text-decoration-color:rgba(255,255,255,.24);
+  text-underline-offset:4px;font-size:.78rem
+}
+.home-redesign-active .launcher-actions .home-secondary-ai:hover{
+  transform:translateX(2px);box-shadow:none!important;background:transparent!important;color:#fff
+}
+.home-redesign-active .coach-preview{padding:20px}
+.home-redesign-active .coach-level{margin:18px 0 14px;padding-bottom:12px}
+.home-redesign-active .coach-level strong{font-size:1.6rem}
+.home-redesign-active .coach-preview p{
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
+}
+.home-redesign-active .home-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.home-redesign-active .home-stats>div:nth-child(1),
+.home-redesign-active .home-stats>div:nth-child(3){display:none}
+.home-redesign-active .privacy-strip{padding:14px 16px}
+.home-redesign-active .privacy-strip p{display:none}
+.home-redesign-active .privacy-strip>button{border:0;background:transparent;padding:6px 0;box-shadow:none}
+.home-redesign-active .privacy-strip>button:hover{transform:translateX(2px);box-shadow:none}
+.home-redesign-active .topbar,.home-redesign-nav .topbar{
+  overflow:visible;padding-right:max(2px,env(safe-area-inset-right));padding-left:max(2px,env(safe-area-inset-left))
+}
+.skills-loading{position:relative;overflow:hidden;background:var(--panel-soft);min-height:112px;color:transparent}
+.skills-loading::before{
+  content:"";position:absolute;left:18px;right:18px;top:24px;height:14px;border-radius:999px;
+  background:rgba(95,108,128,.16);box-shadow:0 28px 0 rgba(95,108,128,.10),0 56px 0 rgba(95,108,128,.08)
+}
+.skills-loading::after{
+  content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.64),transparent);
+  animation:fiezelHomeSkeleton 1.2s ease-in-out infinite
+}
+@keyframes fiezelHomeSkeleton{to{transform:translateX(100%)}}
+
+@media(max-width:640px){
+  .home-redesign-active .launcher-actions{display:flex;flex-direction:column;gap:6px}
+  .home-redesign-active .launcher-actions .primary{width:100%}
+  .home-redesign-active .launcher-actions .home-secondary-ai{width:auto!important}
+  .home-redesign-active .learning-launcher{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .home-redesign-active .launch-card{min-height:132px;padding:14px;gap:10px}
+  .home-redesign-active .launch-card em{display:none}
+  .home-redesign-active .launch-card>svg{display:none}
+  .home-redesign-active .coach-preview{min-height:0}
+  .home-redesign-nav .bottomnav{width:calc(100% - 12px);gap:2px;padding:6px}
+  .home-redesign-nav .nav{font-size:.54rem;padding:7px 1px}
+}
+
+@media(prefers-reduced-motion:reduce){.skills-loading::after{animation:none}}
