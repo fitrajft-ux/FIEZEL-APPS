@@ -56,6 +56,7 @@ jobs:
           <script src="./features/neural-voice/fiezel-neural-voice.js"></script>
           <script src="./features/neural-voice/fiezel-web-audio-player.js"></script>
           <script src="./features/neural-voice/fiezel-neural-voice-bootstrap.js"></script>
+          <script src="./features/neural-voice/fiezel-puter-tts-provider.js"></script>
           <script src="./features/neural-voice/fiezel-neural-voice-audibility-fix.js"></script>
           <script>
           (()=>{
@@ -85,7 +86,7 @@ jobs:
               if(!rt)throw new Error('FiezelVoiceRuntime missing');
               await timeout(rt.prepare(),900000,'prepare');
               const state=rt.status();
-              r.engine=state.engine;r.prepared=state.prepared;r.ready=state.ready;
+              r.engine=state.engine;r.prepared=state.prepared;r.ready=state.ready;r.primaryProvider=state.primaryProvider;r.activeProvider=state.activeProvider;
 
               // Stabilize one ordinary utterance so the measured pair represents the
               // Library's ongoing audiobook path rather than first-ever model warm-up.
@@ -167,6 +168,7 @@ jobs:
           set -euo pipefail
           jq -e '.success==true' m02547-result.json >/dev/null
           jq -e '.engine=="supertonic-3" and .prepared==true and .ready==true' m02547-result.json >/dev/null
+          jq -e '.primaryProvider=="puter-cloud" and .activeProvider=="supertonic-3"' m02547-result.json >/dev/null
           jq -e '.usedBrowserTts==false' m02547-result.json >/dev/null
           jq -e '.first.provider!="browser-speech-synthesis" and .second.provider!="browser-speech-synthesis"' m02547-result.json >/dev/null
           jq -e '.warmReady==true and .secondWarmHit==true and .secondGenerateCount==0' m02547-result.json >/dev/null

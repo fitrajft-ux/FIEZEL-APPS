@@ -61,14 +61,22 @@ const test = (name, fn) => { fn(); pass++; console.log('PASS', name); };
   });
 
   // ---- defect 2: Classroom hard-required the optional 94MB Indonesian bundle --------
-  test('Classroom speech falls back to the mandatory engine when Indonesian is absent', () => {
-    assert.ok(/indoReady/.test(fix), 'readiness of the optional bundle is checked');
-    assert.ok(/status\(\)\.prepared/.test(fix), 'readiness means actually downloaded');
+  // m025-49 changes the architecture: Puter cloud can make the Indonesian runtime ready
+  // without downloading the local bundle. The old assertion `status().prepared` meant
+  // "all readiness is a local download" and is no longer true system-wide. Preserve the
+  // properties that still matter: local `prepared` remains an offline-download signal,
+  // cloud readiness is explicit, and every Classroom fallback keeps Indonesian language.
+  test('Classroom selects the Indonesian runtime from local preparation or cloud readiness', () => {
+    assert.ok(/indoReady/.test(fix), 'Indonesian runtime readiness is checked');
+    assert.ok(/indoStatus\.prepared \|\| indoStatus\.cloudReady/.test(fix),
+      'local downloaded readiness and Puter cloud readiness are distinct valid routes');
     assert.ok(/baseRuntime\.speak\(spoken/.test(fix),
-      'must fall through to the mandatory English neural engine');
+      'a last-resort neural route still exists when the dedicated runtime cannot be used');
+    assert.ok(/\{ lang: 'id-ID', allowFallback: false \}/.test(fix),
+      'the last-resort global runtime must be forced to Indonesian, never inherit English default');
     // The old code threw when the module was missing; that is what broke Classroom.
     assert.ok(!/throw new Error\('indonesian_bundle_module_missing'\)[\s\S]{0,200}classroomStop/.test(fix),
-      'a missing optional bundle must not abort Classroom speech');
+      'a missing local Indonesian bundle must not abort Classroom speech');
   });
 
   test('the fallback is neural, never browser TTS', () => {

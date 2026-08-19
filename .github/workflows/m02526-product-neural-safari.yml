@@ -1,12 +1,18 @@
 name: m025-26 product neural Safari proof
 
-# Proves the five properties OWNER required, against the REAL product runtime modules
-# (not a standalone bench page): audible-length audio plays, latency is sub-realtime,
-# the engine downloads exactly once, a reload re-downloads nothing, and the page never
-# dies or reloads during inference.
+# Proves the live hybrid product runtime on real Safari arm64. In m025-49 Puter cloud is
+# the primary online provider; this signed-out CI runner therefore exercises the automatic
+# Supertonic offline fallback: neural audio works, no browser TTS is substituted, the local
+# engine downloads exactly once, reload re-downloads nothing, and inference never crashes
+# or latches the circuit. Puter <2s/voice-quality acceptance remains a signed-in physical
+# device gate because CI has no OWNER Puter session.
 on:
   push:
     branches: [master/m02526-sherpa-vits-engine, main]
+  pull_request:
+    paths:
+      - 'features/neural-voice/**'
+      - '.github/workflows/m02526-product-neural-safari.yml'
   workflow_dispatch:
 
 permissions:
@@ -32,8 +38,8 @@ jobs:
         run: |
           set -euo pipefail
           # m025-44: the shipped English engine is supertonic-3 (m025-42 replaced the
-          # sherpa-vits substrate). The proof follows the engine the product actually
-          # loads; pinning it to a retired vendor path proves nothing about the build.
+          # sherpa-vits substrate). In m025-49 this engine is the offline/cloud-failure
+          # fallback, so the proof still pins exactly the bytes that offline users run.
           cd vendor/supertonic-3
           shasum -a 256 sherpa-onnx-wasm-main-tts.wasm sherpa-onnx-wasm-main-tts.js \
             sherpa-onnx-tts.js sherpa-onnx-tts.worker.js \
@@ -59,6 +65,7 @@ jobs:
           <script src="./features/neural-voice/fiezel-neural-voice.js"></script>
           <script src="./features/neural-voice/fiezel-web-audio-player.js"></script>
           <script src="./features/neural-voice/fiezel-neural-voice-bootstrap.js"></script>
+          <script src="./features/neural-voice/fiezel-puter-tts-provider.js"></script>
           <script>
           (()=>{
             const r={phase:'boot',engine:null,plays:[],errors:[],usedBrowserTts:false};
@@ -79,7 +86,7 @@ jobs:
               await to(rt.prepare(),900000,'prepare');
               r.prepareMs=Math.round(performance.now()-dlStart);
               const st=rt.status();
-              r.engine=st.engine;r.engineModel=st.engineModel;r.totalBytes=st.totalBytes;r.assetCount=st.assetCount;
+              r.engine=st.engine;r.engineModel=st.engineModel;r.totalBytes=st.totalBytes;r.assetCount=st.assetCount;r.primaryProvider=st.primaryProvider;r.activeProvider=st.activeProvider;
               r.prepared=st.prepared;r.storage=st.storage;
               // 2. capture audio instead of playing it, so we can measure real sample output
               const captured=[];
@@ -157,32 +164,31 @@ jobs:
           jq -e '.usedBrowserTts==false' m02526-run1.json >/dev/null
           jq -e '.usedBrowserTts==false' m02526-run2.json >/dev/null
           jq -e '.engine=="supertonic-3"' m02526-run1.json >/dev/null
+          jq -e '.primaryProvider=="puter-cloud" and .activeProvider=="supertonic-3"' m02526-run1.json >/dev/null
           jq -e '(.plays|length)==3' m02526-run1.json >/dev/null
           jq -e '[.plays[].provider]|all(.!="browser-speech-synthesis")' m02526-run1.json >/dev/null
           # no latched failure state
           jq -e '.circuitOpen==false and .lastFallbackReason=="" and .readyAfter==true' m02526-run1.json >/dev/null
-          # Latency. The 6000ms budget was calibrated for the retired sherpa-vits engine on
-          # this runner. Supertonic is a heavier model, and this runner is markedly slower
-          # than the device the app ships to - measured the same week:
-          #     runner (this job, 4 steps): first 6320ms, warm 6250/6281ms
-          #     OWNER's iPhone (m025-44 diagnostics): generation 1.4-2.7s per sentence
-          # So the ceiling moves to 7000ms to match what this machine can do, and a second
-          # assertion guards what a flat ceiling cannot: warm generations must stay stable
-          # relative to each other, so a real degradation still fails even under the ceiling.
-          jq -e '[.plays[]|select(.label|startswith("warm"))|.ms]|all(.<7000)' m02526-run1.json >/dev/null
-          jq -e '[.plays[]|select(.label|startswith("warm"))|.ms]|(max/min)<1.5' m02526-run1.json >/dev/null
-          jq -e '(.plays[0].ms)<15000' m02526-run1.json >/dev/null
+          # m025-49 role correction. The old <7s warm threshold measured Supertonic as
+          # the PRIMARY engine. OWNER explicitly replaced that architecture after device
+          # evidence showed Supertonic cannot sustain realtime (median RTF 2.294). On this
+          # signed-out runner Supertonic is now only the offline/cloud-failure fallback.
+          # Keep a hard anti-hang ceiling instead of pretending the fallback meets the
+          # Puter primary latency target: every local utterance must complete <15s, the
+          # circuit must stay healthy, and the cache/download assertions below stay strict.
+          jq -e '[.plays[].ms]|all(.<15000)' m02526-run1.json >/dev/null
+          jq -e '[.plays[].ms]|all(.<15000)' m02526-run2.json >/dev/null
           # download-once: second visit must not re-run the download path
           jq -e '.prepared==true and .storage=="cache"' m02526-run2.json >/dev/null
           r1="$(jq -r '.prepareMs' m02526-run1.json)"; r2="$(jq -r '.prepareMs' m02526-run2.json)"
           b1="$(jq -r '.engineTransferBytes' m02526-run1.json)"; b2="$(jq -r '.engineTransferBytes' m02526-run2.json)"
           echo "prepareMs cold=$r1 cached=$r2 | engine bytes over network: cold=$b1 cached=$b2"
           # The decisive check is bytes, not milliseconds. The first visit must actually
-          # pull the ~110MB engine; the second must pull essentially nothing because the
-          # payload is served from the stable neural cache.
+          # pull the full fallback payload; the second must pull essentially nothing because
+          # the payload is served from the stable neural cache.
           jq -e '.engineTransferBytes > 90000000' m02526-run1.json >/dev/null
           jq -e '.engineTransferBytes < 1000000' m02526-run2.json >/dev/null
-          echo "ALL OWNER ACCEPTANCE PROPERTIES PASS"
+          echo "ALL SIGNED-OUT FALLBACK ACCEPTANCE PROPERTIES PASS"
 
       - name: Upload product neural evidence
         if: always()

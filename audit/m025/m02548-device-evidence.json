@@ -1,0 +1,174 @@
+{
+  "schema": "fiezel-m02548-device-evidence-v1",
+  "source": "OWNER Safari 26.5 standalone PWA capture, 2026-08-19T06:48:37Z, build m025-47",
+  "capture": "audit/m025/m02548-device-capture-20260819T0648Z.json",
+  "engineSpeed": {
+    "totalAudioSeconds": 67.0,
+    "totalGenerateSeconds": 135.8,
+    "realtimeFactorMedian": 2.294,
+    "realtimeFactorNote": "Rises through the session (0.72-1.47 early, 2.16-3.30 late): thermal throttling and/or both language workers alive at once.",
+    "renders": [
+      {
+        "lang": "id",
+        "audioSeconds": 1.987,
+        "generateMs": 1778,
+        "realtimeFactor": 0.895
+      },
+      {
+        "lang": "en",
+        "audioSeconds": 2.414,
+        "generateMs": 3549,
+        "realtimeFactor": 1.47
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 4.821,
+        "generateMs": 5051,
+        "realtimeFactor": 1.048
+      },
+      {
+        "lang": "en",
+        "audioSeconds": 4.368,
+        "generateMs": 3654,
+        "realtimeFactor": 0.837
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.386,
+        "generateMs": 3869,
+        "realtimeFactor": 0.718
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 1.329,
+        "generateMs": 1487,
+        "realtimeFactor": 1.119
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.822,
+        "generateMs": 11144,
+        "realtimeFactor": 1.914
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.263,
+        "generateMs": 16396,
+        "realtimeFactor": 3.116
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 2.764,
+        "generateMs": 9120,
+        "realtimeFactor": 3.3
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.345,
+        "generateMs": 12262,
+        "realtimeFactor": 2.294
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 3.765,
+        "generateMs": 9917,
+        "realtimeFactor": 2.634
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 2.695,
+        "generateMs": 6891,
+        "realtimeFactor": 2.557
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.665,
+        "generateMs": 13336,
+        "realtimeFactor": 2.354
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 1.364,
+        "generateMs": 4335,
+        "realtimeFactor": 3.178
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.465,
+        "generateMs": 11801,
+        "realtimeFactor": 2.159
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 5.684,
+        "generateMs": 13832,
+        "realtimeFactor": 2.433
+      },
+      {
+        "lang": "id",
+        "audioSeconds": 2.845,
+        "generateMs": 7415,
+        "realtimeFactor": 2.607
+      }
+    ]
+  },
+  "utterances": [
+    {
+      "requestId": "nv-mszq0g2h-2",
+      "chunkCount": 3,
+      "hardChunkChars": 80,
+      "maxChunkChars": 64,
+      "secondsToFirstSound": 3.55,
+      "silentHolesMidUtteranceSeconds": []
+    },
+    {
+      "requestId": "nv-mszq1c4w-6",
+      "chunkCount": 2,
+      "hardChunkChars": 80,
+      "maxChunkChars": 74,
+      "secondsToFirstSound": 3.87,
+      "silentHolesMidUtteranceSeconds": []
+    },
+    {
+      "requestId": "nv-mszq2vi2-7",
+      "chunkCount": 1,
+      "hardChunkChars": 80,
+      "maxChunkChars": 80,
+      "secondsToFirstSound": 11.15,
+      "silentHolesMidUtteranceSeconds": []
+    },
+    {
+      "requestId": "nv-mszq5ujm-8",
+      "chunkCount": 7,
+      "hardChunkChars": 80,
+      "maxChunkChars": 78,
+      "secondsToFirstSound": 16.4,
+      "silentHolesMidUtteranceSeconds": [
+        12.26,
+        9.92,
+        6.89,
+        13.34,
+        4.33
+      ]
+    },
+    {
+      "requestId": "nv-mszqc43n-9",
+      "chunkCount": 11,
+      "hardChunkChars": 80,
+      "maxChunkChars": 80,
+      "secondsToFirstSound": 11.8,
+      "silentHolesMidUtteranceSeconds": []
+    }
+  ],
+  "eventLoop": {
+    "expectedDelayMs": 250,
+    "observedMin": 250,
+    "observedMax": 284,
+    "verdict": "Main thread healthy. The m025-48 diagnostics sink fixed the localStorage stalls; remaining defects are NOT main-thread starvation."
+  },
+  "contention": {
+    "neural_generation_busy": 3,
+    "supersededErrors": 3,
+    "note": "Busy on the id engine made the Classroom hand Indonesian text to the en engine (af_bella, generationLang 'en'): the 'radio rusak' garble."
+  }
+}

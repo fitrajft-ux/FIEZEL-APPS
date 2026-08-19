@@ -302,7 +302,7 @@
         await adapter.initialize();
         const sherpaPlayer=root.FiezelWebAudioPlayer.createPlayer(root);
         const speech=speechSettings();
-        service=root.FiezelNeuralVoice.createVoiceService({config:root.FiezelNeuralVoiceConfig,adapter,env:root,playAudio:sherpaPlayer.play,generationTimeoutMs:NEURAL_GENERATION_TIMEOUT_MS,streamSentences:speech.streamSentences,streamMaxWords:speech.streamMaxWords,prosody:root.FiezelProsody||null});
+        service=root.FiezelNeuralVoice.createVoiceService({config:root.FiezelNeuralVoiceConfig,adapter,env:root,playAudio:sherpaPlayer.play,generationTimeoutMs:NEURAL_GENERATION_TIMEOUT_MS,streamSentences:speech.streamSentences,streamMaxWords:speech.streamMaxWords,prosody:root.FiezelProsody||null,workerInference:true});
         playerRef=sherpaPlayer;
         wasmPolicy='supertonic-3-wasm-worker';
         phase='ready';lastError='';initFailedThisSession=false;initTimedOutThisSession=false;

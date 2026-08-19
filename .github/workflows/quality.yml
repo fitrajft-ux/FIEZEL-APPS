@@ -94,6 +94,7 @@ jobs:
           node neural-voice-m02547-latency-integrity-test.js
           node neural-voice-m02542-persona-test.js
           node neural-voice-m02548-clarity-test.js
+          node neural-voice-m02549-puter-test.js
           node neural-voice-m026-raw-pcm-ab-test.js
           node puter-auth-coop-test.js
           node puter-auth-diagnostics-test.js

@@ -508,6 +508,82 @@
       }
     }
 
+    /**
+     * m025-49 subject welcome, per OWNER: "setiap memulai subject baru, harus ada kata
+     * welcomenya ... tapi kata welcomenya berubah-ubah, tidak repetitive".
+     *
+     * Three deliberate choices:
+     *   - the line is spoken through the Indonesian engine DIRECTLY, with an explicit
+     *     `sapaan` intent, so the greeting register is chosen by what the line IS rather
+     *     than by matching words in it;
+     *   - the rotation index is persisted, so re-opening the app does not restart the
+     *     bank and greet him the same way twice in a row;
+     *   - it never blocks the lesson: if the voice is not ready the subtitle still shows
+     *     the greeting and teaching continues.
+     */
+    /**
+     * m025-49. The engine measured on OWNER's device spends about two seconds of CPU per
+     * second of speech, so nothing said at the moment it is requested can ever feel
+     * instant. Beats, though, are known in advance: while Jahran is reading the board and
+     * answering the micro-check, the NEXT beat's narration can already be rendered into
+     * the voice cache. By the time he presses Continue the audio exists and playback is
+     * immediate.
+     *
+     * Idle-scheduled and entirely best-effort: it never blocks a render, never
+     * initialises the engine, and yields to any real request at a chunk boundary.
+     */
+    function warmNextBeat() {
+      var indo = root.FiezelIndonesianVoice;
+      if (!indo || typeof indo.prefetch !== 'function') return;
+      var upcoming;
+      try {
+        var snap = session.snapshot();
+        upcoming = session.beats()[snap.beatIndex + 1];
+      } catch (_) { return; }
+      var line = upcoming && (upcoming.idText || upcoming.id);
+      if (!line) return;
+      var run = function () {
+        try { indo.prefetch(line, { lang: 'id-ID', speed: baseSpeed() }); } catch (_) {}
+      };
+      if (typeof root.requestIdleCallback === 'function') root.requestIdleCallback(run, { timeout: 2500 });
+      else root.setTimeout(run, 600);
+    }
+
+    var WELCOME_INDEX_KEY = 'fiezel-tutor-welcome-index-v1';
+    function nextWelcomeIndex() {
+      var index = 0;
+      try { index = Number(root.localStorage.getItem(WELCOME_INDEX_KEY)) || 0; } catch (_) { index = 0; }
+      try { root.localStorage.setItem(WELCOME_INDEX_KEY, String((index + 1) % 1000)); } catch (_) {}
+      return index;
+    }
+    function welcomeLine() {
+      var script = root.FiezelGenZScript;
+      var topic = '';
+      try { topic = String((lesson() && lesson().topic) || ''); } catch (_) { topic = ''; }
+      if (!script || typeof script.welcome !== 'function') {
+        return topic ? 'Halooo Jahran, balik lagi nih! Yuk kita bedah ' + topic + ' bareng aku.' : '';
+      }
+      return script.welcome(topic, nextWelcomeIndex());
+    }
+    async function speakWelcome() {
+      var line = welcomeLine();
+      if (!line) return;
+      var subtitle = root.document.getElementById('tutorSubtitle');
+      if (subtitle) subtitle.textContent = line;
+      var indo = root.FiezelIndonesianVoice;
+      var ready = false;
+      try { ready = !!(indo && typeof indo.speak === 'function' && indo.status && indo.status().prepared); } catch (_) { ready = false; }
+      if (!ready) return;
+      voiceBusy = true;
+      try {
+        await indo.speak(line, { lang: 'id-ID', speed: baseSpeed(), intent: 'sapaan', allowFallback: false });
+      } catch (_) {
+        // A greeting that fails is not a lesson that fails.
+      } finally {
+        voiceBusy = false;
+      }
+    }
+
     function bundleStatus() {
       var id = root.FiezelIndonesianVoice && typeof root.FiezelIndonesianVoice.status === 'function'
         ? root.FiezelIndonesianVoice.status() : { prepared: false, ready: false, error: 'module_missing' };
@@ -653,6 +729,7 @@
       mount().innerHTML = shell(main, snap);
       wire();
       if (autoSpeak && beat) speak({ en: beat.en, id: beat.idText }, 1);
+      warmNextBeat();
     }
 
     function renderQuiz() {
@@ -739,7 +816,15 @@
         b.addEventListener('click', function () { stopVoice(); session.chooseCategory(b.dataset.category); save(); render(); });
       });
       root.document.querySelectorAll('[data-lesson]').forEach(function (b) {
-        b.addEventListener('click', function () { stopVoice(); session.chooseLesson(b.dataset.lesson); save(); renderTeach(true); });
+        b.addEventListener('click', function () {
+          stopVoice();
+          session.chooseLesson(b.dataset.lesson);
+          save();
+          // Greet first, then teach: the beat narration would otherwise supersede the
+          // greeting the moment it started.
+          renderTeach(false);
+          speakWelcome().then(function () { renderTeach(true); });
+        });
       });
       root.document.querySelectorAll('[data-micro]').forEach(function (b) {
         b.addEventListener('click', function () {

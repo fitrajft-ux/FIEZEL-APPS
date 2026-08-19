@@ -56,6 +56,10 @@
     ['mengucapkan', 'ucapin'],
     ['perhatikan', 'perhatiin'],
     ['mari kita', 'yuk kita'],
+    // m025-49: the longer phrase must be listed FIRST, because these are applied in
+    // order. "selamat datang" -> "haloo" was turning "selamat datang kembali" into
+    // "haloo kembali", which is not a greeting in any register - it loses the "back".
+    ['selamat datang kembali', 'balik lagi nih'],
     ['selamat datang', 'haloo']
   ]);
 
@@ -68,6 +72,28 @@
   var PRAISES = Object.freeze([
     'Wih, keren banget!', 'Mantap!', 'Nah, bener!', 'Sip, tepat!',
     'Keren, lanjut!', 'Yes, itu dia!', 'Bagus banget!', 'Top, kamu paham!'
+  ]);
+
+  /**
+   * m025-49 subject welcome, per OWNER: every time Jahran opens a subject the tutor
+   * greets him by name and says what they are about to do together - and never twice the
+   * same way, because a greeting that repeats is worse than no greeting at all.
+   *
+   * `{topic}` is filled with the subject on screen. Each line is written to be spoken:
+   * short, one breath, opening on an interjection so the persona layer hears it as a
+   * greeting and switches to the brighter register instead of the explaining one.
+   */
+  var WELCOMES = Object.freeze([
+    'Halooo Jahran, balik lagi nih! Yuk kita bedah {topic} bareng aku.',
+    'Hai Jahran! Siap ya, hari ini kita bongkar {topic} sampai kebiasaan.',
+    'Nah, Jahran datang! Kita kupas {topic} pelan-pelan, santai aja.',
+    'Halo Jahran, ketemu lagi! Sekarang giliran {topic} yang kita taklukin.',
+    'Hei Jahran, mantap kamu balik lagi! Gas kita bedah {topic}.',
+    'Yuk Jahran, kita mulai! {topic} kelihatannya ribet, padahal enggak.',
+    'Wih, Jahran udah balik! Aku udah siapin {topic} buat kamu.',
+    'Halooo Jahran! Hari ini kita ngobrolin {topic}, aku temenin sampai paham.',
+    'Hai Jahran, semangat ya! {topic} kita bahas sampai kamu pede.',
+    'Nah Jahran, pas banget! Ayo bedah {topic} bareng aku sekarang.'
   ]);
 
   function escapeRe(value) { return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -270,6 +296,24 @@
   function opener(index) { return rotate(OPENERS, index); }
   function praise(index) { return rotate(PRAISES, index); }
 
+  /**
+   * The greeting for one subject entry.
+   * @param {string} topic subject name as shown on screen
+   * @param {number} index how many subjects have been opened before this one
+   */
+  function welcome(topic, index) {
+    // A lesson title is written to be READ - "Articles a / an / the" - and a slash spoken
+    // aloud is not a word. Said out loud a person says "atau", so that is what the tutor
+    // says; the bare letters are then handled by pronounceable() downstream.
+    var subject = String(topic == null ? '' : topic)
+      .replace(/\s*[\/|]\s*/g, ' atau ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Never leave a hole in the sentence: an unnamed subject is still "this material".
+    if (!subject) subject = 'materi ini';
+    return rotate(WELCOMES, index).split('{topic}').join(subject);
+  }
+
   return Object.freeze({
     CASUAL: CASUAL,
     OPENERS: OPENERS,
@@ -282,6 +326,8 @@
     pronounceable: pronounceable,
     speakable: speakable,
     opener: opener,
-    praise: praise
+    praise: praise,
+    WELCOMES: WELCOMES,
+    welcome: welcome
   });
 }));

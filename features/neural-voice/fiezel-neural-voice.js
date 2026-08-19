@@ -182,6 +182,29 @@
     // never imposed on one.
     const streamSentences = options.streamSentences === true;
     const streamMaxWords = Number(options.streamMaxWords) > 0 ? Math.floor(Number(options.streamMaxWords)) : 26;
+    // m025-49. The Apple character cap exists because Kokoro ran its model ON THE MAIN
+    // THREAD and a long inference got the WebKit content process killed (m025-13/m025-22).
+    // The Supertonic engine runs entirely inside a Worker, and the device capture proves
+    // it: the event-loop watchdog observed 250-284ms against a 250ms schedule through the
+    // whole session, i.e. no main-thread stall at all.
+    //
+    // On this engine the cap is now pure damage. It cuts at 64-80 CHARACTERS, which is
+    // mid-sentence and often mid-clause; punctuate() then puts a full stop on every
+    // fragment, so the voice FALLS at each cut, each fragment resolves its own persona,
+    // and the streaming player inserts a pause between them. OWNER's "banyak jeda",
+    // "jedanya terlalu panjang" and "tanggung menggantung" are all partly this: one
+    // sentence delivered as three finished ones. The capture recorded up to 16 fragments
+    // for a single utterance.
+    //
+    // So the cap stays the DEFAULT - it still protects the main-thread engine it was
+    // written for, and the Apple slice contract is unchanged for every caller that does
+    // not speak up - and an engine that owns a Worker opts out of it explicitly.
+    const workerInference = options.workerInference === true;
+    const hardChunkChars = workerInference ? 0 : appleHardChunkChars;
+    // Measured on OWNER's device: 135.8s of engine work for 67.0s of audio, i.e. about
+    // two seconds of CPU per second of speech. At that ratio streaming cannot catch up -
+    // splitting the opening only moves the silence and adds a seam - so the answer is not
+    // to cut smaller but to render BEFORE the learner asks. See the render cache below.
     // How many rendered lines may sit in the schedule at once. Two is what makes the
     // seam gapless (the next line is queued while the current one plays) without letting
     // a fast engine buffer a whole chapter of PCM into memory.
@@ -189,8 +212,8 @@
     const prosody = options.prosody || (env && env.FiezelProsody) || null;
     function planChunks(text) {
       return streamSentences
-        ? planStream(text, { maxWords: streamMaxWords, hardChars: appleHardChunkChars })
-        : splitIntoChunks(text, targetWords, hardWords, appleHardChunkChars);
+        ? planStream(text, { maxWords: streamMaxWords, hardChars: hardChunkChars })
+        : splitIntoChunks(text, targetWords, hardWords, hardChunkChars);
     }
     /**
      * Silence to leave before a line, decided by how the previous one ended.
@@ -290,6 +313,77 @@
     function dropWarm() { warmed = null; }
 
     /**
+     * Identity of one RENDERED line. Position is part of it because delivery is: the same
+     * words opening a thought and closing one are different audio, and handing back the
+     * wrong one would flatten exactly the arc m025-48 built.
+     */
+    function renderKey(text, options, index, total) {
+      const o = options || {};
+      return [text, o.voice || '', o.speed || 1, o.lang || '', o.intent || '', index, total].join('\u0000');
+    }
+
+    /**
+     * m025-49 render cache.
+     *
+     * Measured on OWNER's device, this engine spends 135.8 seconds of CPU to produce 67.0
+     * seconds of speech - about two seconds of work per second of audio. That single
+     * number is the whole latency story, and no amount of chunking or scheduling changes
+     * it: the wait for a line is twice its length, every single time it is spoken.
+     *
+     * A tutor does not say new things all day. It greets, it praises, it transitions, and
+     * it re-reads the same lesson beat when the learner goes back a step. Every one of
+     * those was being synthesised again from scratch. Holding the finished PCM means the
+     * second time is free, and - far more important - it gives `prefetch()` somewhere to
+     * put work done AHEAD of the learner, which is the only way an engine slower than
+     * realtime can ever feel instant.
+     *
+     * Bounded by total samples rather than entry count, because one long line costs as
+     * much memory as twenty short ones. 90 seconds of 44.1 kHz mono is about 16 MB.
+     */
+    const cacheLimitSamples = Number(options.cacheSamples) > 0
+      ? Math.floor(Number(options.cacheSamples))
+      : 44100 * 90;
+    const renderCache = new Map();
+    let renderCacheSamples = 0;
+
+    function audioSampleCount(audio) {
+      const samples = audio && (audio.audio || audio.data);
+      return samples && typeof samples.length === 'number' ? samples.length : 0;
+    }
+
+    function cacheTake(key) {
+      if (!renderCache.has(key)) return null;
+      const entry = renderCache.get(key);
+      // Re-insert so the most recently used entry is the last one evicted.
+      renderCache.delete(key);
+      renderCache.set(key, entry);
+      return entry;
+    }
+
+    function cachePut(key, audio) {
+      const size = audioSampleCount(audio);
+      if (!size || size > cacheLimitSamples) return false;
+      if (renderCache.has(key)) renderCacheSamples -= audioSampleCount(renderCache.get(key));
+      renderCache.delete(key);
+      renderCache.set(key, audio);
+      renderCacheSamples += size;
+      let evicted = 0;
+      while (renderCacheSamples > cacheLimitSamples && renderCache.size > 1) {
+        const oldest = renderCache.keys().next().value;
+        renderCacheSamples -= audioSampleCount(renderCache.get(oldest));
+        renderCache.delete(oldest);
+        evicted += 1;
+      }
+      if (evicted) diag({ phase: 'render_cache_evict', evicted, entries: renderCache.size });
+      return true;
+    }
+
+    function cacheClear() {
+      renderCache.clear();
+      renderCacheSamples = 0;
+    }
+
+    /**
      * Generates one utterance ahead of time. m025-47 deliberately yields one macrotask
      * before reserving the engine. The product wraps speak() in two async readiness
      * layers; without this yield Library prefetch(N+1) could enter the engine queue before
@@ -303,12 +397,22 @@
       const text = normalizeText(input, maxChars);
       if (!text) return false;
       const chunks = planChunks(text);
-      // Multi-chunk text already prefetches internally once it starts playing.
-      if (chunks.length !== 1) return false;
       const voice = options.voice || (config.voices && config.voices.fiezelPrimary) || 'af_heart';
+      // m025-49. Multi-sentence text used to be refused here, on the reasoning that a
+      // playing utterance prefetches its own next chunk. That reasoning only holds once
+      // playback has STARTED - it does nothing for a line the learner has not asked for
+      // yet, which is precisely the work worth doing on an engine that needs two seconds
+      // of CPU per second of speech. With a render cache there is now somewhere to put
+      // it, so a whole beat can be rendered before it is ever requested.
+      if (chunks.length !== 1) return warmAllChunks(chunks, { ...options, voice }, voice);
       const resolvedOptions = { ...options, voice };
       const key = warmKey(text, resolvedOptions);
       if (warmed && warmed.key === key) return true;
+      // Already rendered earlier in the session: nothing to warm.
+      if (renderCache.has(renderKey(chunks[0], resolvedOptions, 0, 1))) {
+        diag({ phase: 'prefetch_cache_hit', voice, chars: text.length });
+        return true;
+      }
       const epoch = stopEpoch;
       await new Promise(resolve => setTimeout(resolve, 0));
       if (epoch !== stopEpoch) {
@@ -330,7 +434,12 @@
         lang: options.lang || '',
         intent: options.intent || '',
         position: { index: 0, total: chunks.length }
-      })).then(value => ({ ok: true, value }), error => ({ ok: false, error }));
+      })).then(value => {
+        // Warm work goes into the cache as well as the single warm slot, so a line
+        // rendered ahead survives being superseded and is still free the next time.
+        cachePut(renderKey(chunks[0], resolvedOptions, 0, chunks.length), value);
+        return { ok: true, value };
+      }, error => ({ ok: false, error }));
       warmed = { key, pending };
       const outcome = await pending;
       if (!outcome.ok) {
@@ -340,6 +449,46 @@
         return false;
       }
       diag({ phase: 'prefetch_ready', elapsedMs: Date.now() - startedAt });
+      return true;
+    }
+
+    /**
+     * Renders every chunk of an upcoming line into the cache, one at a time.
+     *
+     * Enqueued chunk by chunk on purpose. The engine queue is FIFO, so a real speak()
+     * arriving mid-warm waits for at most ONE chunk instead of the whole passage, and the
+     * loop drops out the moment anything real has started. Speculative work must never be
+     * the reason a learner waits.
+     */
+    async function warmAllChunks(chunks, resolvedOptions, voice) {
+      const startedAt = Date.now();
+      const epoch = stopEpoch;
+      const startingGeneration = generation;
+      let rendered = 0;
+      diag({ phase: 'prefetch_bulk_start', chunks: chunks.length, voice });
+      for (let index = 0; index < chunks.length; index += 1) {
+        if (epoch !== stopEpoch || generation !== startingGeneration) {
+          diag({ phase: 'prefetch_bulk_yield', rendered, chunks: chunks.length, voice });
+          return rendered > 0;
+        }
+        const key = renderKey(chunks[index], resolvedOptions, index, chunks.length);
+        if (renderCache.has(key)) continue;
+        try {
+          const audio = await runOnEngine(() => adapter.generate(chunks[index], {
+            voice,
+            speed: resolvedOptions.speed || 1,
+            lang: resolvedOptions.lang || '',
+            intent: resolvedOptions.intent || '',
+            position: { index, total: chunks.length }
+          }));
+          cachePut(key, audio);
+          rendered += 1;
+        } catch (error) {
+          diag({ phase: 'prefetch_bulk_failed', index, error: String(error && (error.message || error.name) || error) });
+          return rendered > 0;
+        }
+      }
+      diag({ phase: 'prefetch_bulk_ready', rendered, chunks: chunks.length, elapsedMs: Date.now() - startedAt, voice });
       return true;
     }
 
@@ -380,6 +529,20 @@
       async function generateChunk(chunkIndex) {
         const chunk = chunks[chunkIndex];
         if (callGeneration !== generation) throw new Error('TTS request superseded');
+        // A line this engine has already rendered costs nothing to say again. At two
+        // seconds of CPU per second of speech that is the difference between a greeting
+        // that lands instantly and one the learner waits through every single time.
+        const cacheKey = renderKey(chunk, {
+          voice,
+          speed: speakOptions.speed || 1,
+          lang: speakOptions.lang || '',
+          intent: speakOptions.intent || ''
+        }, chunkIndex, chunks.length);
+        const cached = cacheTake(cacheKey);
+        if (cached) {
+          diag({ phase: 'render_cache_hit', requestId, chunkIndex, voice });
+          return cached;
+        }
         const generateStartedAt = Date.now();
         if (activeInference) {
           diag({
@@ -475,6 +638,7 @@
           diag({ phase: 'generate_completed_over_budget', requestId, chunkIndex, elapsedMs: generateElapsedMs, timeoutMs: generationTimeoutMs });
         }
         diag({ phase: 'generate_ready', requestId, chunkIndex, voice, elapsedMs: generateElapsedMs, samples: samples && typeof samples.length === 'number' ? samples.length : null });
+        cachePut(cacheKey, audio);
         if (callGeneration !== generation) throw new Error('TTS request superseded');
         return audio;
       }
@@ -577,7 +741,14 @@
       }
     }
 
-    return Object.freeze({ speak, stop, prefetch, splitIntoChunks: (text) => planChunks(text) });
+    return Object.freeze({
+      speak,
+      stop,
+      prefetch,
+      splitIntoChunks: (text) => planChunks(text),
+      clearRenderCache: cacheClear,
+      renderCacheState: () => ({ entries: renderCache.size, samples: renderCacheSamples, limit: cacheLimitSamples })
+    });
   }
 
   return Object.freeze({ normalizeText, splitIntoChunks, createVoiceService });

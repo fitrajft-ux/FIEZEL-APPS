@@ -20,6 +20,21 @@
       return text || String(fallback || '').trim();
     } catch (_) { return String(fallback || '').trim(); }
   }
+  // m025-49. A line that is merely WAITING for the engine is not a failure.
+  //
+  // OWNER device capture 2026-08-19T06:48Z: the Indonesian engine answered
+  // `neural_generation_busy` because the previous line was still rendering, and this
+  // layer immediately handed the Indonesian text to the base runtime instead. The base
+  // runtime is the same Supertonic model built with `generationLang: 'en'`, so the tutor
+  // read Indonesian words under English reading rules. That is the "suara pecah seperti
+  // radio rusak" in the report - not a codec artefact at all, but the wrong language
+  // model applied to the right text.
+  //
+  // Contention is transient by definition, so it is now waited out on the correct engine.
+  var TRANSIENT = /neural_generation_busy|superseded|neural_generation_stopped/i;
+  var RETRY_DELAYS_MS = [180, 420, 900];
+  function wait(ms){ return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+
   async function classroomSpeak(text, options){
     var opts = options || {};
     if (!classroomActive()) {
@@ -30,29 +45,53 @@
     if (!spoken) return { provider: 'indonesian-neural-local', skipped: true };
     var indo = root.FiezelIndonesianVoice;
     var indoReady = false;
-    try { indoReady = !!(indo && typeof indo.speak === 'function' && indo.status && indo.status().prepared); } catch (_) { indoReady = false; }
+    try {
+      var indoStatus = indo && indo.status ? indo.status() : {};
+      // Local `prepared` still means the shared Supertonic bundle is installed. m025-49
+      // adds Puter cloud, whose readiness is deliberately separate so cloud availability
+      // never lies about offline assets. Either state is sufficient to choose the
+      // Indonesian runtime; that runtime itself owns cloud -> local fallback.
+      indoReady = !!(indo && typeof indo.speak === 'function' && (indoStatus.prepared || indoStatus.cloudReady));
+    } catch (_) { indoReady = false; }
     if (indoReady) {
-      try {
-        return await indo.speak(spoken, {
-          speed: typeof opts.speed === 'number' ? opts.speed : 1,
-          lang: 'id-ID',
-          allowFallback: false
-        });
-      } catch (error) {
-        // Fall through to the mandatory engine rather than leaving Classroom mute.
-        try { root.console && root.console.warn && root.console.warn('indonesian tutor voice failed, using base engine', error); } catch (_) {}
+      for (var attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+        try {
+          return await indo.speak(spoken, {
+            speed: typeof opts.speed === 'number' ? opts.speed : 1,
+            lang: 'id-ID',
+            allowFallback: false
+          });
+        } catch (error) {
+          var message = String((error && (error.message || error.name)) || error);
+          if (!TRANSIENT.test(message)) {
+            try { root.console && root.console.warn && root.console.warn('indonesian tutor voice failed', error); } catch (_) {}
+            break;
+          }
+          // Superseded means a NEWER line is already speaking; this one is stale and
+          // must not be forced back onto the learner behind it.
+          if (/superseded|stopped/i.test(message)) {
+            return { provider: 'indonesian-neural-local', skipped: true, reason: 'superseded' };
+          }
+          if (attempt === RETRY_DELAYS_MS.length) {
+            // Still contended. Silence for one line is recoverable; a line delivered in
+            // the wrong language is what the learner hears as a broken voice.
+            return { provider: 'indonesian-neural-local', skipped: true, reason: 'engine_busy' };
+          }
+          await wait(RETRY_DELAYS_MS[attempt]);
+        }
       }
     }
     // m025-42: Indonesian and English are now ONE bundle, so this branch is reached only
-    // before the shared voice pack is prepared (or if its worker failed to start). The
-    // fallback stays exactly as m025-39 left it: fall through to the base runtime rather
-    // than leaving Classroom mute, and never to browser TTS.
+    // before the shared voice pack is prepared (or if its worker failed to start). m025-49
+    // may also reach it while Puter is unavailable before the local bundle is ready.
+    // The base runtime is still allowed as the last neural route, but the language is
+    // explicit: never let Indonesian tutor text inherit the global English default.
     //
     // m025-39 (historical): the Indonesian bundle was an OPTIONAL 94MB download, and
     // requiring it here made Classroom speech fail outright for anyone who had not
     // fetched it - what OWNER hit as "reload Classroom selalu gagal".
     if (!baseRuntime || typeof baseRuntime.speak !== 'function') throw new Error('neural_runtime_missing');
-    return baseRuntime.speak(spoken, Object.assign({}, opts, { allowFallback: false }));
+    return baseRuntime.speak(spoken, Object.assign({}, opts, { lang: 'id-ID', allowFallback: false }));
   }
 
   function classroomStop(){
@@ -95,7 +134,7 @@
       classroomSpeech: 'id-ID neural tutor',
       targetLanguage: 'en-US',
       classroomTranscript: 'id-ID authored tutor line',
-      indonesianVoicePrepared: !!id.prepared,
+      indonesianVoicePrepared: !!(id.offlinePrepared != null ? id.offlinePrepared : id.prepared),
       indonesianVoiceReady: !!id.ready,
       indonesianModel: id.model || original.indonesianModel || '',
       error: id.error || original.error || ''

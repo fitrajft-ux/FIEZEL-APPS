@@ -7,7 +7,7 @@
 
   const config = Object.freeze({
     schema: 'fiezel-neural-voice-v2',
-    provider: 'kokoro-js-local-patched',
+    provider: 'puter-cloud-primary-supertonic-offline-fallback',
     providerVersion: '1.2.1',
     providerSourceCommit: 'd4ef0569c79046dfd77fbb128502546a3afe5bef',
     transformersVersion: '3.5.1',
@@ -15,7 +15,18 @@
     modelId: 'kokoro-model',
     dtype: 'q8',
     device: 'wasm',
+    cloudProvider: Object.freeze({
+      id: 'puter-cloud',
+      sdk: 'Puter.js v2',
+      api: 'puter.ai.txt2speech',
+      upstreamProvider: 'openai',
+      model: 'gpt-4o-mini-tts',
+      responseFormat: 'wav',
+      userPays: true,
+      clientApiKeyRequired: false
+    }),
     localRouting: Object.freeze({
+      scope: 'supertonic-offline-fallback-only',
       modelBasePath: './vendor/',
       voiceBaseUrl: './vendor/kokoro-model/voices',
       wasmBasePath: './vendor/kokoro-js/wasm/',
@@ -26,6 +37,9 @@
       offlineAfterWarmRequired: true
     }),
     zeroCostPolicy: Object.freeze({
+      // Compatibility object scoped ONLY to the Supertonic offline fallback.
+      // The system-wide runtime policy below is the source of truth for the hybrid path.
+      scope: 'supertonic-offline-fallback-only',
       paidApiAllowed: false,
       subscriptionAllowed: false,
       meteredBillingAllowed: false,
@@ -34,6 +48,19 @@
       localInferenceRequired: true,
       buildTimePublicAssetDownloadAllowed: true,
       sameOriginStaticAssetBootstrapAllowed: true
+    }),
+    runtimePolicy: Object.freeze({
+      primaryProvider: 'puter-cloud',
+      remoteInferenceAllowed: true,
+      crossOriginTtsRequestsAllowed: true,
+      paidRuntimeAllowed: true,
+      meteredBillingAllowed: true,
+      userPays: true,
+      vendorApiKeyAllowed: false,
+      offlineAfterWarmRequired: false,
+      offlineFallbackRequired: true,
+      offlineFallbackProvider: 'supertonic-3',
+      speculativePaidPrefetchAllowed: false
     }),
     voices: Object.freeze({
       fiezelPrimary: 'af_bella',
@@ -68,7 +95,7 @@
     }),
     fallback: Object.freeze({
       browserSpeechSynthesis: true,
-      reason: 'Emergency-only fallback if local neural runtime cannot initialize.'
+      reason: 'Emergency-only browser fallback after Puter cloud and Supertonic fallback are unavailable.'
     })
   });
 

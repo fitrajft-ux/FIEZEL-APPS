@@ -77,10 +77,17 @@ function fakeService(options) {
     assert.strictEqual(calls.length, 1, 'warming generates once');
     await service.speak('Hello there.', { voice: 'test_voice', allowFallback: false });
     assert.strictEqual(calls.length, 1, 'speaking consumes the warm entry instead of regenerating');
-    // The entry is consumed, so the next identical call generates again rather than
-    // replaying stale audio forever.
+    // m025-49: saying the same line again is now free as well. The warm SLOT is still
+    // consumed exactly once - that part of the single-flight contract is unchanged - but
+    // the rendered PCM is kept in a bounded cache behind it, because the engine measured
+    // on OWNER's device needs about two seconds of CPU for every second of speech and a
+    // tutor repeats its greetings, its praise and any beat the learner steps back to.
+    // The key carries text, voice, speed, language, intent and sentence position, so a
+    // replay can only ever be the audio that exact request would have produced.
     await service.speak('Hello there.', { voice: 'test_voice', allowFallback: false });
-    assert.strictEqual(calls.length, 2);
+    assert.strictEqual(calls.length, 1, 'a repeated line is served from the render cache');
+    await service.speak('A different line.', { voice: 'test_voice', allowFallback: false });
+    assert.strictEqual(calls.length, 2, 'different text still reaches the engine');
   });
 
   await test('warming never breaks single-flight, and a mismatch is simply ignored', async () => {
@@ -104,12 +111,23 @@ function fakeService(options) {
     assert.strictEqual(other.played.length, 1, 'and only the requested line is heard');
   });
 
-  await test('stopping drops the warm entry, so cancelled audio can never play', async () => {
-    const { service, calls } = fakeService();
+  await test('stopping drops the warm reservation, and never plays it as another line', async () => {
+    const { service, calls, played } = fakeService();
     await service.prefetch('Cancelled line.', { voice: 'test_voice' });
     service.stop();
+    // The warm SLOT is gone: a different line must reach the engine on its own merits and
+    // must never be served the audio that was warmed for something else. That is the
+    // property this test exists for.
+    await service.speak('A different line.', { voice: 'test_voice', allowFallback: false });
+    assert.strictEqual(calls.length, 2, 'the new line is generated, not substituted');
+    assert.strictEqual(played.length, 1, 'only the requested line is heard');
+    // m025-49: the cancelled line's finished PCM is kept. Cache identity includes text,
+    // voice, speed, language, intent and sentence position, so it can only ever be
+    // replayed for the exact request that produced it - and stop() is called on every
+    // Classroom navigation, so clearing renders there would throw away the pre-rendering
+    // that makes an engine slower than realtime usable at all.
     await service.speak('Cancelled line.', { voice: 'test_voice', allowFallback: false });
-    assert.strictEqual(calls.length, 2, 'after stop the line is generated fresh');
+    assert.strictEqual(calls.length, 2, 'the same line replays from the render cache');
   });
 
   await test('the library warms the next sentence after the live line has first claim on the engine', () => {

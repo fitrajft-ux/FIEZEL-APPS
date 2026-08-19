@@ -15,9 +15,11 @@
  *   - 44.1 kHz instead of 22.05 kHz;
  *   - one model covers id AND en, so the two bundles collapse into one smaller total.
  *
- * Policy unchanged and re-verified: 100% on-device, no API key, no paid runtime, no
- * cross-origin inference. Licence: sample code MIT, model weights OpenRAIL-M (free;
- * use-restrictions only), recorded in THIRD-PARTY-LICENSES.md.
+ * m025-49 role: OFFLINE FALLBACK behind Puter cloud TTS. This provider itself remains
+ * 100% on-device, no API key, no paid runtime, and no cross-origin inference. Those
+ * claims are provider-local, not the system-wide voice policy. Licence: sample code MIT,
+ * model weights OpenRAIL-M (free; use-restrictions only), recorded in
+ * THIRD-PARTY-LICENSES.md.
  */
 (function (root) {
   'use strict';
@@ -113,6 +115,7 @@
       schema: SCHEMA,
       version: version,
       engine: 'supertonic-3',
+      role: 'offline-fallback',
       model: MODEL_ID,
       bilingual: true,
       languages: Object.freeze(['id', 'en']),
@@ -220,7 +223,11 @@
         // carry at its edges.
         streamSentences: settings.streamSentences,
         streamMaxWords: settings.streamMaxWords,
-        prosody: root.FiezelProsody || null
+        prosody: root.FiezelProsody || null,
+        // Supertonic runs its model inside a Worker, so the Apple main-thread character
+        // cap does not apply: the device capture shows no main-thread stall at all, and
+        // the cap was cutting sentences mid-clause.
+        workerInference: true
       });
       adapters[key] = adapter;
       services[key] = service;
@@ -275,6 +282,29 @@
     });
   }
 
+  /**
+   * m025-49. Renders a line the learner has not asked for yet, so that when they do ask
+   * it is already there. Deliberately refuses to INITIALISE the engine: a speculative
+   * call must never be the thing that pays a multi-second worker start-up.
+   */
+  async function prefetch(text, options) {
+    var opts = options || {};
+    var lang = normalizeLang(opts.lang);
+    var live = services[lang];
+    if (!live || typeof live.prefetch !== 'function') return false;
+    var script = root.FiezelGenZScript;
+    var spoken = script && script.speakable ? script.speakable(text, lang) : String(text || '');
+    if (!spoken) return false;
+    try {
+      return await live.prefetch(spoken, {
+        voice: opts.voice || 'id_natural',
+        speed: typeof opts.speed === 'number' ? opts.speed : 1,
+        intent: opts.intent || '',
+        lang: lang === 'en' ? 'en-US' : 'id-ID'
+      });
+    } catch (_) { return false; }
+  }
+
   function stop() {
     Object.keys(services).forEach(function (key) {
       try { if (services[key] && services[key].stop) services[key].stop(); } catch (_) {}
@@ -298,6 +328,7 @@
     prepare: prepare,
     initialize: initialize,
     speak: speak,
+    prefetch: prefetch,
     stop: stop,
     release: release,
     verifyCached: verifyCached,

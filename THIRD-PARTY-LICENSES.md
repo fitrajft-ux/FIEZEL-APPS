@@ -78,3 +78,22 @@ Build provenance and the exact deviations from the upstream build script:
 `vendor/sherpa-vits/` (Piper `en_US-libritts_r-medium`) and `vendor/sherpa-vits-id/`
 (Piper `id_ID-news_tts-medium`) are no longer loaded by the app. They remain in the
 tree for one release as a rollback path and are removed once the device gate passes.
+
+
+## Puter cloud TTS
+
+FIEZEL uses the externally loaded Puter.js v2 SDK (`https://js.puter.com/v2/`) for
+cloud text-to-speech through `puter.ai.txt2speech`. The primary m025-49 path requests
+OpenAI `gpt-4o-mini-tts` through Puter and decodes the returned audio into the same
+Web Audio PCM player used by the local engine.
+
+- **Billing model**: Puter **User-Pays**. AI/TTS usage is charged against the signed-in
+  Puter user's allowance/account, not a developer API key embedded in FIEZEL.
+- **Client secret**: none. FIEZEL relies on the user's Puter session and ships no vendor
+  API key.
+- **Offline behavior**: the bundled Supertonic 3 engine remains the automatic offline
+  and cloud-failure fallback.
+- **Speculative billing**: cloud prefetch is disabled; speculative pre-rendering warms
+  only the local Supertonic fallback.
+- **Service terms**: Puter-hosted services and upstream AI models are governed by their
+  applicable service terms; they are not redistributed as model weights in this repo.

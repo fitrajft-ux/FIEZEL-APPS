@@ -117,7 +117,8 @@
     "remoteInference": false,
     "crossOriginTtsRequests": false,
     "sameOriginExplicitWarmup": true,
-    "offlineAfterWarmRequired": true
+    "offlineAfterWarmRequired": true,
+    "scope": "supertonic-offline-fallback-only"
   },
   "promotion": {
     "sourceAndAssetClosure": "PASS",
@@ -171,7 +172,8 @@
       "modelWeights": "OpenRAIL-M",
       "paid": false
     },
-    "deviceGate": "PENDING"
+    "deviceGate": "PENDING",
+    "role": "offline-fallback"
   },
   "retired": [
     {
@@ -183,5 +185,30 @@
       ],
       "reason": "English libritts_r and Indonesian news_tts are single-register Piper models; the Indonesian one is a news-reader corpus, which is the structural cause of the flat delivery OWNER reported. Kept in the tree for one release as a rollback path; delete once the device gate passes."
     }
-  ]
+  ],
+  "primaryVoiceProvider": {
+    "id": "puter-cloud",
+    "sdk": "https://js.puter.com/v2/",
+    "api": "puter.ai.txt2speech",
+    "upstreamProvider": "openai",
+    "model": "gpt-4o-mini-tts",
+    "responseFormat": "wav",
+    "auth": "Puter user session",
+    "clientApiKey": false,
+    "billing": "User-Pays",
+    "selection": "online-and-puter-signed-in",
+    "fallback": "supertonic-3"
+  },
+  "runtimePolicy": {
+    "paidRuntime": true,
+    "vendorApiKey": false,
+    "remoteInference": true,
+    "crossOriginTtsRequests": true,
+    "userPays": true,
+    "meteredBillingAllowed": true,
+    "offlineAfterWarmRequired": false,
+    "offlineFallbackRequired": true,
+    "offlineFallbackProvider": "supertonic-3",
+    "speculativePaidPrefetch": false
+  }
 }

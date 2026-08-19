@@ -62,6 +62,19 @@
     });
   }
 
+  /** Warms an upcoming line. Never initialises the engine; see the Supertonic module. */
+  function prefetch(text, options) {
+    var live = engine();
+    if (!live || typeof live.prefetch !== 'function') return Promise.resolve(false);
+    var opts = options || {};
+    return live.prefetch(text, {
+      lang: 'id',
+      voice: opts.voice || VOICE_ID,
+      speed: typeof opts.speed === 'number' ? opts.speed : 1,
+      intent: opts.intent || ''
+    });
+  }
+
   function stop() { var live = engine(); if (live) live.stop(); }
   function release() { var live = engine(); return live ? live.release() : Promise.resolve(); }
   function verifyCached() { var live = engine(); return live ? live.verifyCached() : Promise.resolve(false); }
@@ -74,6 +87,7 @@
     status: status,
     prepare: prepare,
     speak: speak,
+    prefetch: prefetch,
     stop: stop,
     release: release,
     verifyCached: verifyCached,
