@@ -117,5 +117,7 @@ jobs:
           node neural-voice-m028-audio-integrity-test.js
           node neural-voice-m0281-regression-test.js
           node neural-voice-m0282-seam-buffer-integrity-test.js
+          node neural-voice-worker-stale-result-test.js
+          node neural-voice-classroom-prefetch-test.js
           node puter-auth-coop-test.js
           node puter-auth-diagnostics-test.js

@@ -88,16 +88,15 @@ const boot = fs.readFileSync('features/neural-voice/fiezel-neural-voice-bootstra
 
   // --- 5. the shared adapter stayed language-agnostic ------------------------------
   const adapter = require('./features/neural-voice/fiezel-sherpa-vits-adapter.js');
-  const persona = require('./features/neural-voice/fiezel-voice-persona.js');
 
   const english = adapter.createSherpaVitsAdapter({
     env: {}, expectedSpeakers: 10, modelId: 'supertonic-3-int8-2026-05-11',
-    voiceSids: persona.voiceSids(), defaultVoice: 'id_natural',
+    voiceSids: { id_natural: 2, tutor_ajar: 2, tutor_hype: 2 }, defaultVoice: 'id_natural',
     kind: 'supertonic-3', generationLang: 'en'
   });
   const indo = adapter.createSherpaVitsAdapter({
     env: {}, expectedSpeakers: 10, modelId: 'supertonic-3-int8-2026-05-11',
-    voiceSids: persona.voiceSids(), defaultVoice: 'id_natural',
+    voiceSids: { id_natural: 2, tutor_ajar: 2, tutor_hype: 2 }, defaultVoice: 'id_natural',
     kind: 'supertonic-3', generationLang: 'id'
   });
   assert.strictEqual(english.kind, 'supertonic-3');
@@ -106,10 +105,16 @@ const boot = fs.readFileSync('features/neural-voice/fiezel-neural-voice-bootstra
   // Separate instances, or one language's in-flight generation would clobber the other.
   assert.notStrictEqual(english, indo);
 
-  // The persona map is what the adapter resolves speakers through, and the two
-  // registers OWNER approved must both be reachable from it.
-  assert.deepStrictEqual(Object.keys(persona.voiceSids()).sort(),
+  // m028-3: OWNER removed the second voice and the persona module with it. The three
+  // product voice ids survive as stored-preference keys, but they all resolve to the one
+  // remaining speaker - a learner whose saved preference is tutor_hype must still work.
+  const idEngineSrc = fs.readFileSync('features/neural-voice/fiezel-supertonic-voice.js', 'utf8');
+  const idVoiceMap = /voiceSids\s*:\s*\{([^}]*)\}/.exec(idEngineSrc);
+  assert.ok(idVoiceMap, 'the Indonesian engine must state its voice map literally');
+  assert.deepStrictEqual((idVoiceMap[1].match(/[a-z_]+(?=\s*:)/g) || []).sort(),
     ['id_natural', 'tutor_ajar', 'tutor_hype']);
+  assert.strictEqual(new Set((idVoiceMap[1].match(/:\s*(\d+)/g) || [])).size, 1,
+    'every id must resolve to the single remaining voice');
 
   // --- 6. release markers ---------------------------------------------------------
   const diag = fs.readFileSync('features/neural-voice/fiezel-diag-panel.js', 'utf8');

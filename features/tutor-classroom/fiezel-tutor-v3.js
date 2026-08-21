@@ -508,6 +508,32 @@
       }
     }
 
+    /**
+     * m025-53: mirrors Library's m025-45/47 cross-call warm cache (fiezel-library-ui.js
+     * warmNext) for the one Classroom sequence that has a deterministic "next" item -
+     * teaching beats, read in order like Library reads sentences. The reactive paths
+     * (quiz answers, micro-check feedback, "confused") have no such next item because
+     * the next utterance depends on what the user does, so they are left alone; warming
+     * a guess there would either be wrong or, per runtime.prefetch's own contract, just
+     * silently unused - never wrong-but-played, since takeWarm() only consumes an entry
+     * whose key matches the text actually spoken next.
+     */
+    function warmNextBeat(beatIndexAtCall) {
+      setTimeout(function () {
+        var runtime = root.FiezelVoiceRuntime;
+        if (!runtime || typeof runtime.prefetch !== 'function' || !session) return;
+        var snap = session.snapshot();
+        if (snap.phase !== 'teach' || snap.beatIndex !== beatIndexAtCall) return;
+        var upcoming = session.beats()[beatIndexAtCall + 1];
+        if (!upcoming) return;
+        try {
+          // Must match the clamp speak() applies for a beat (speedFactor 1) exactly, or
+          // takeWarm()'s key comparison misses and the reservation goes to waste unused.
+          runtime.prefetch(upcoming.en, { voice: englishVoice(), lang: 'en-US', speed: Math.max(.55, Math.min(1.25, baseSpeed())), allowFallback: false });
+        } catch (_) {}
+      }, 0);
+    }
+
     function bundleStatus() {
       var id = root.FiezelIndonesianVoice && typeof root.FiezelIndonesianVoice.status === 'function'
         ? root.FiezelIndonesianVoice.status() : { prepared: false, ready: false, error: 'module_missing' };
@@ -652,7 +678,7 @@
         teacherPanel(snap, beat) + '</div>';
       mount().innerHTML = shell(main, snap);
       wire();
-      if (autoSpeak && beat) speak({ en: beat.en, id: beat.idText }, 1);
+      if (autoSpeak && beat) { speak({ en: beat.en, id: beat.idText }, 1); warmNextBeat(snap.beatIndex); }
     }
 
     function renderQuiz() {

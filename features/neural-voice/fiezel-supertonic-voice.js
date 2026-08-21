@@ -171,18 +171,22 @@
       if (!root.FiezelSherpaVitsAdapter || !root.FiezelNeuralVoice || !root.FiezelWebAudioPlayer) {
         throw new Error('supertonic_runtime_modules_missing');
       }
-      var personas = root.FiezelVoicePersona || null;
       var adapter = root.FiezelSherpaVitsAdapter.createSherpaVitsAdapter({
         env: root,
         basePath: absolute(BASE),
         expectedSpeakers: EXPECTED_SPEAKERS,
         modelId: MODEL_ID,
-        voiceSids: personas ? personas.voiceSids() : { id_natural: 2 },
+      // m028-3: OWNER removed the second Indonesian voice (sid 5) and the persona module
+      // with it. The surviving voice is stated literally HERE because the adapter's own
+      // fallback map is {af_bella:0, af_heart:180} - 'id_natural' is not a key in it, so
+      // an omitted map resolves to undefined and the learner gets the wrong speaker or
+      // none. All three ids point at the one voice so stored preferences keep resolving.
+        voiceSids: { id_natural: 2, tutor_ajar: 2, tutor_hype: 2 },
         defaultVoice: 'id_natural',
         kind: 'supertonic-3',
         generationLang: key,
-        personas: personas,
-        usePersona: !!personas,
+        personas: null,
+        usePersona: false,
         // Supertonic emits its own breath pauses; adding ours would double them.
         padBetweenPhrases: false,
         // 1.0 is already natural for this model - the 0.85 calibration belonged to Piper.

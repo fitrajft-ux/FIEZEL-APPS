@@ -146,4 +146,39 @@ assert.match(voiceSource, /SCHEDULE_DEPTH\s*=\s*2/, 'bounded schedule depth must
 assert.doesNotMatch(playerSource, /FiezelVoiceRuntime\s*=/, 'player must not mutate FiezelVoiceRuntime contract');
 assert.doesNotMatch(playerSource, /createScriptProcessor|ScriptProcessorNode/, 'M028 must use AudioWorklet or existing legacy playback, never deprecated ScriptProcessor');
 
+// 6. m028-2 lead-in silence.
+//
+// Measured on the shipped Supertonic engine, every render begins with 215-557ms below the
+// silence floor before its first speech sample. The service only asked for trimming when a
+// line was JOINED to another, so a single-chunk reply played that dead air in full.
+const Player = require('./features/neural-voice/fiezel-web-audio-player.js');
+
+const LEAD = 4410;   // 100ms at 44.1kHz
+const TAIL = 8820;   // 200ms
+const SPEECH = 4410;
+const KEEP = Math.round(44100 * 0.012);   // TRIM_KEEP_S of air is deliberately left
+const shaped = new Float32Array(LEAD + SPEECH + TAIL);
+for (let i = 0; i < SPEECH; i += 1) shaped[LEAD + i] = (i % 2 === 0 ? 0.4 : -0.4);
+
+const headOnly = Player.trimSilence(shaped, 44100, { head: true, tail: false });
+assert.ok(headOnly.length < shaped.length, 'head trim must remove the engine lead-in');
+assert.ok(headOnly.length >= SPEECH + TAIL, 'head trim must not touch the tail');
+assert.ok(Math.abs(headOnly.length - (shaped.length - LEAD + KEEP)) <= 2,
+  'head trim removes the dead air and leaves TRIM_KEEP_S of it');
+
+const bothEdges = Player.trimSilence(shaped, 44100, { head: true, tail: true });
+assert.ok(bothEdges.length < headOnly.length, 'seam trimming both edges must still be available');
+assert.equal(Player.trimSilence(shaped, 44100).length, bothEdges.length,
+  'the no-options default must stay exactly what m025-47 shipped');
+assert.equal(Player.trimSilence(shaped, 44100, { head: false, tail: false }), shaped,
+  'asking for no trim returns the buffer by identity');
+
+// m028-4: both edges on every line. A standalone sentence used to keep its 636ms tail on
+// the m025-47 reasoning that it spaced the next Library sentence; measured, that is dead
+// air rather than a governed pause, and it is what OWNER hears as a book that never joins.
+assert.match(voiceSource, /gapMs, trim: true \}/,
+  'the streaming path must trim both edges, joined or not');
+assert.doesNotMatch(voiceSource, /trim: joined/,
+  'trimming must no longer be conditional on the line being joined');
+
 console.log('M028 audio integrity focused acceptance PASS');

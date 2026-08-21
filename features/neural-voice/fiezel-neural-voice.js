@@ -333,8 +333,14 @@
     }
 
     function stop() {
+      // m025-52 investigation: a superseded request that already finished generating
+      // (audio thrown away, per voice_service_error/"TTS request superseded") had no
+      // trace of WHAT called stop() - generation just changed between two log lines
+      // with nothing in between. This line is the only cost of closing that gap.
+      const previousGeneration = generation;
       generation += 1;
       stopEpoch += 1;
+      diag({ phase: 'runtime_stop', previousGeneration, generation, hadActiveStop: typeof activeStop === 'function' });
       // Anything warmed for the request being cancelled is now stale.
       dropWarm();
       if (typeof activeStop === 'function') {
@@ -603,7 +609,17 @@
             // between two sentences instead of governing it.
             const joined = chunks.length > 1;
             const playback = await playAudio(audio, streamSentences
-              ? { signalGeneration: callGeneration, continuous: joined && chunkIndex > 0, gapMs, trim: joined }
+              // m028-4: both edges, always.
+              //
+              // m025-47 tied trimming to `joined` and kept a standalone line's tail on the
+              // reasoning that it spaces one Library sentence from the next. Measured on
+              // the shipped engine that "spacing" is 636ms of model-decided silence, on
+              // top of a lead-in of 401ms and the main-thread round trip the Library pays
+              // between sentences - which is what OWNER reports as a book that never joins
+              // up. The tail is not a governed pause; it is dead air that happens to sit
+              // where a pause belongs. Removing it makes the gap the round trip alone, and
+              // leaves the pause something we can set deliberately rather than inherit.
+              ? { signalGeneration: callGeneration, continuous: joined && chunkIndex > 0, gapMs, trim: true }
               : { signalGeneration: callGeneration });
             scheduled.push({ playback, chunkIndex, startedAt: playbackStartedAt });
             activeStop = stopScheduled;

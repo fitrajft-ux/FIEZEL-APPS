@@ -3,6 +3,7 @@
   "private": true,
   "version": "5.18.0",
   "dependencies": {
+    "html-pdf-node": "^1.0.8",
     "web-push": "3.6.7"
   },
   "scripts": {

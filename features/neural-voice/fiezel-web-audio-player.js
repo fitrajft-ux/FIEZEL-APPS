@@ -460,14 +460,32 @@
     return found;
   }
 
-  function trimSilence(samples, sampleRate) {
+  /**
+   * m028-2: head and tail are separable, because they are not the same thing.
+   *
+   * The tail is prosody. For a line rendered on its own it is what spaces one Library
+   * sentence from the next, which is why m025-47 keeps it.
+   *
+   * The head is dead air. Measured straight off the shipped Supertonic engine, every
+   * render begins with 215-557ms below the silence floor before its first speech sample.
+   * The service only asks for trimming when a line is JOINED to another, so a
+   * single-chunk utterance played that silence in full - which is why a short reply
+   * appeared to arrive a third of a second after it was ready.
+   *
+   * Default with no options is unchanged: both edges.
+   */
+  function trimSilence(samples, sampleRate, options) {
     if (!samples || !samples.length) return samples;
+    const opts = options || {};
+    const head = opts.head !== false;
+    const tail = opts.tail !== false;
+    if (!head && !tail) return samples;
     const rate = Number(sampleRate) > 0 ? Number(sampleRate) : PREFERRED_SAMPLE_RATE;
     const keep = Math.max(1, Math.round(rate * TRIM_KEEP_S));
     let start = 0;
     let end = samples.length - 1;
-    while (start < end && Math.abs(samples[start]) < SILENCE_FLOOR) start += 1;
-    while (end > start && Math.abs(samples[end]) < SILENCE_FLOOR) end -= 1;
+    if (head) while (start < end && Math.abs(samples[start]) < SILENCE_FLOOR) start += 1;
+    if (tail) while (end > start && Math.abs(samples[end]) < SILENCE_FLOOR) end -= 1;
     start = Math.max(0, start - keep);
     end = Math.min(samples.length - 1, end + keep);
     if (start === 0 && end === samples.length - 1) return samples;
@@ -916,7 +934,12 @@
       let samples = pickSamples(rawAudio);
       if (!samples || !samples.length) throw new Error('Unsupported Kokoro audio payload');
       const sampleRate = pickSampleRate(rawAudio);
-      if (opts.trim) samples = trimSilence(samples, sampleRate);
+      // `trim` keeps its meaning - govern the SEAM, both edges - and is still what a
+      // joined multi-sentence utterance asks for. `trimHead` is the m028-2 addition: the
+      // engine's dead lead-in goes even when the tail must be left alone.
+      const trimTail = opts.trim === true;
+      const trimHead = trimTail || opts.trimHead === true;
+      if (trimHead || trimTail) samples = trimSilence(samples, sampleRate, { head: trimHead, tail: trimTail });
       const rawStats = diagnosticMode ? analyzeSamples(samples) : null;
       if (diagnosticMode !== 'raw') samples = conditionSamples(samples);
       const renderedStats = diagnosticMode ? analyzeSamples(samples) : null;

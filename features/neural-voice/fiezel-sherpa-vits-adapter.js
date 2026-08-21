@@ -142,6 +142,15 @@
     var pending = null;
     // True for the whole multi-phrase sequence of one generate() call.
     var generating = false;
+    // m028-5: the worker is a single WASM thread with no cancellation primitive, so
+    // stop() can silence the CALLER's promise but it cannot make the worker stop
+    // computing. Without this flag, stop() clears `pending`/`generating` and a new
+    // generate() can post a second message while the first is still in flight; the
+    // worker's late reply for the FIRST request then resolves whichever request
+    // currently owns `pending` - the second one - with the first request's audio. This
+    // flag tracks the underlying computation independently of whether anyone is still
+    // waiting for it, so a new request cannot start until the worker actually replies.
+    var workerBusy = false;
     var backendState = Object.freeze({ id: 'uninitialized', device: '', dtype: '' });
     var numSpeakers = 0;
     var modelType = null;
@@ -186,10 +195,17 @@
       }
       if (data.type === 'sherpa-onnx-tts-result') {
         sampleRate = Number(data.sampleRate) || sampleRate;
+        // The reply that just arrived is, by construction, the reply to the most
+        // recent postMessage - the guard below never lets a second one be sent while
+        // this flag is true. Clearing it here, unconditionally, is what lets a
+        // request that arrives after stop() actually start the worker again instead
+        // of being told the adapter is still busy forever.
+        workerBusy = false;
         settlePending('resolve', { samples: data.samples, sampleRate: sampleRate });
         return;
       }
       if (data.type === 'error') {
+        workerBusy = false;
         var error = new Error(String(data.message || 'sherpa_worker_error'));
         if (pending) settlePending('reject', error);
         else stage('adapter_worker_error', backendDetail({ error: error.message }));
@@ -245,6 +261,7 @@
     function synthesize(unit, sid, speed) {
       return new Promise(function (resolve, reject) {
         pending = { resolve: resolve, reject: reject };
+        workerBusy = true;
         try {
           // generateWithConfig is the only path that carries `extra`, and `extra.lang`
           // is how a multilingual model is told which language this line is. The
@@ -256,7 +273,7 @@
           worker.postMessage(generationLang
             ? { type: 'generateWithConfig', text: unit, genConfig: genConfig }
             : { type: 'generate', text: unit, sid: sid, speed: speed });
-        } catch (error) { pending = null; reject(error); }
+        } catch (error) { pending = null; workerBusy = false; reject(error); }
       });
     }
 
@@ -340,9 +357,9 @@
         // second request rather than interleaving and returning another request's audio.
         // m025-41: a request now spans several worker calls, so the guard covers the whole
         // phrase sequence, not just one postMessage.
-        if (pending || generating) {
+        if (pending || generating || workerBusy) {
           var busy = new Error('neural_generation_busy');
-          stage('adapter_generate_busy', backendDetail({ voice: voice, sid: sid }));
+          stage('adapter_generate_busy', backendDetail({ voice: voice, sid: sid, workerBusy: workerBusy }));
           throw busy;
         }
         // Punctuation is the only lever this model exposes for pausing: its duration

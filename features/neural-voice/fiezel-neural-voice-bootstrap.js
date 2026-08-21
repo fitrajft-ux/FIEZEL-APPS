@@ -275,12 +275,14 @@
           // both share the vendored bundle, so the second language costs no download.
           expectedSpeakers:10,
           modelId:'supertonic-3-int8-2026-05-11',
-          voiceSids:root.FiezelVoicePersona?root.FiezelVoicePersona.voiceSids():undefined,
+          // m028-3: see fiezel-supertonic-voice.js. An omitted map falls back to the
+          // adapter's {af_bella:0, af_heart:180}, where 'id_natural' resolves to undefined.
+          voiceSids:{id_natural:2,tutor_ajar:2,tutor_hype:2},
           defaultVoice:'id_natural',
           kind:'supertonic-3',
           generationLang:'en',
-          personas:root.FiezelVoicePersona||null,
-          usePersona:!!root.FiezelVoicePersona,
+          personas:null,
+          usePersona:false,
           // Supertonic emits real breath pauses (0.5-0.7s measured); the synthetic
           // silence the Piper path needed would double them.
           padBetweenPhrases:false,
@@ -522,7 +524,11 @@
   // playback - a caller that ignores it behaves exactly as before.
   async function prefetch(text,options={}){
     try{
-      if(!service||typeof service.prefetch!=='function')return false;
+      // m025-52 investigation: this early return was silent, so a device capture could
+      // not tell "caller never prefetches" (Classroom) apart from "caller prefetches but
+      // service was not ready yet" (Library, service null). Diagnostics-only, no behavior
+      // change - the return value and control flow below are unchanged.
+      if(!service||typeof service.prefetch!=='function'){diag({phase:'prefetch_unavailable',hasService:!!service});return false}
       return await service.prefetch(text,options);
     }catch{return false}
   }

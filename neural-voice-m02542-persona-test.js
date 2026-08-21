@@ -4,11 +4,12 @@
 //
 // OWNER's choice, verbatim from the audition kit:
 //   R2-sid2_GENZ-energetic_S2_ajar  -> explaining lines: sid 2, speed 1.12, pitch 1.03
-//   R2-sid5_GENZ-max_S4_pujian      -> praise lines:     sid 5, speed 1.18, pitch 1.05
+//   R2-sid5_GENZ-max_S4_pujian      -> praise lines:     speed 1.18, pitch 1.05
+// m028-3: OWNER removed sid 5 (the male voice). Both registers now speak as sid 2, so the
+// praise line is a change of pace rather than a change of person.
 const assert = require('assert');
 const fs = require('fs');
 
-const Persona = require('./features/neural-voice/fiezel-voice-persona.js');
 const Script = require('./features/neural-voice/fiezel-genz-script.js');
 const Prosody = require('./features/neural-voice/fiezel-prosody.js');
 const Adapter = require('./features/neural-voice/fiezel-sherpa-vits-adapter.js');
@@ -19,44 +20,47 @@ function test(name, fn) {
   catch (error) { failures++; console.error('FAIL -', name, '\n   ', error.message); }
 }
 
-// ---------------------------------------------------------------- persona contract
-test('the two personas keep the exact numbers OWNER approved', () => {
-  assert.deepStrictEqual(
-    { sid: Persona.PERSONAS.ajar.sid, speed: Persona.PERSONAS.ajar.speed, pitch: Persona.PERSONAS.ajar.pitch },
-    { sid: 2, speed: 1.12, pitch: 1.03 });
-  assert.deepStrictEqual(
-    { sid: Persona.PERSONAS.hype.sid, speed: Persona.PERSONAS.hype.speed, pitch: Persona.PERSONAS.hype.pitch },
-    { sid: 5, speed: 1.18, pitch: 1.05 });
+// ------------------------------------------------------- single-voice contract (m028-3)
+//
+// OWNER removed the second Indonesian voice (sid 5, the male one) AND the persona module
+// with it, so delivery is now uniform: one voice, one register. The hazard is silent
+// regression - a reintroduced persona module, or a caller that omits the voice map and
+// falls through to the adapter's {af_bella:0, af_heart:180} default where 'id_natural'
+// resolves to undefined.
+
+test('the persona module is gone from the product', () => {
+  assert.ok(!fs.existsSync('./features/neural-voice/fiezel-voice-persona.js'),
+    'the persona module must not come back');
+  assert.ok(!fs.readFileSync('./index.html', 'utf8').includes('fiezel-voice-persona'),
+    'index.html must not load a deleted module');
+  assert.ok(!fs.readFileSync('./sw.js', 'utf8').includes('fiezel-voice-persona'),
+    'the shell must not try to cache a deleted module');
 });
 
-test('praise and greeting lines route to the hype persona', () => {
-  assert.strictEqual(Persona.resolve('Wih, keren banget! Jawaban kamu bener.').id, 'hype');
-  assert.strictEqual(Persona.resolve('Haloo! Siap belajar bareng aku hari ini?').id, 'hype');
-  assert.strictEqual(Persona.resolve('Yuk, kita mulai.').id, 'hype');
+test('every Indonesian entry point pins the one remaining voice explicitly', () => {
+  // Both callers must state the map themselves. Omitting it is the silent-wrong-voice bug.
+  const supertonic = fs.readFileSync('./features/neural-voice/fiezel-supertonic-voice.js', 'utf8');
+  const bootstrap = fs.readFileSync('./features/neural-voice/fiezel-neural-voice-bootstrap.js', 'utf8');
+  [['supertonic', supertonic], ['bootstrap', bootstrap]].forEach(([name, src]) => {
+    const map = /voiceSids\s*:\s*\{([^}]*)\}/.exec(src);
+    assert.ok(map, name + ' must state its voice map literally, never omit it');
+    const sids = (map[1].match(/:\s*(\d+)/g) || []).map((m) => Number(m.replace(/[^0-9]/g, '')));
+    assert.ok(sids.length >= 3, name + ' must map id_natural, tutor_ajar and tutor_hype');
+    assert.strictEqual(new Set(sids).size, 1, name + ': every id must resolve to one voice');
+    assert.strictEqual(sids[0], 2, name + ': the surviving Indonesian voice is sid 2');
+    assert.ok(!sids.includes(5), name + ': sid 5 is the removed voice');
+    assert.match(src, /usePersona\s*:\s*false/, name + ' must not re-enable persona switching');
+  });
 });
 
-test('explanations stay on the teaching persona', () => {
-  const line = 'Kata a dan kata an itu buat benda yang masih satu, dan yang pendengarnya belum tentu tau.';
-  assert.strictEqual(Persona.resolve(line).id, 'ajar');
-  // A long line that merely contains a hype word is still an explanation.
-  assert.strictEqual(Persona.resolve(
-    'Bagus untuk diingat, past simple dipakai buat kejadian yang udah kelar di masa lalu dan tidak berlanjut sampai sekarang.'
-  ).id, 'ajar');
+test('no product source declares the removed voice', () => {
+  const files = fs.readdirSync('./features/neural-voice').filter((f) => f.endsWith('.js'));
+  files.forEach((file) => {
+    const src = fs.readFileSync('./features/neural-voice/' + file, 'utf8');
+    assert.ok(!/sid:\s*5\b/.test(src), file + ' must not declare sid 5');
+  });
 });
 
-test('an explicit intent overrides word matching', () => {
-  assert.strictEqual(Persona.resolve('Past simple dipakai buat masa lalu.', 'pujian').id, 'hype');
-  assert.strictEqual(Persona.resolve('Wih, keren!', 'penjelasan').id, 'ajar');
-});
-
-test('the measured ceiling is enforced, not just documented', () => {
-  assert.strictEqual(Persona.clampSpeed(1.6), Persona.MAX_SPEED);
-  assert.strictEqual(Persona.clampPitch(1.4), Persona.MAX_PITCH);
-  assert.ok(Persona.MAX_SPEED <= 1.18 && Persona.MAX_PITCH <= 1.05,
-    'the ceiling must not drift above the setting OWNER approved');
-});
-
-// ---------------------------------------------------------------- Gen Z script layer
 test('formal Indonesian is spoken in the casual register', () => {
   const out = Script.casualize('Saya sudah membuat contoh yang sangat mudah, tetapi Anda tidak melihat.');
   assert.ok(/aku/i.test(out) && /udah/i.test(out) && /bikin/i.test(out), out);
@@ -149,12 +153,14 @@ function fakeEngine(options) {
     }
     terminate() {}
   }
+  // m028-3: the single surviving voice, stated the way the product now states it.
   const adapter = Adapter.createSherpaVitsAdapter(Object.assign({
     env: { Worker: FakeWorker },
     prosody: Prosody,
-    personas: Persona,
+    personas: null,
+    usePersona: false,
     expectedSpeakers: 10,
-    voiceSids: Persona.voiceSids(),
+    voiceSids: { id_natural: 2, tutor_ajar: 2, tutor_hype: 2 },
     defaultVoice: 'id_natural'
   }, options || {}));
   return { adapter, posted };
@@ -167,7 +173,7 @@ async function asyncTest(name, fn) {
 
 (async function () {
   await asyncTest('a Supertonic request carries its language to the engine', async () => {
-    const { adapter, posted } = fakeEngine({ generationLang: 'id', usePersona: true, padBetweenPhrases: false, naturalSpeed: 1, generationSteps: 4 });
+    const { adapter, posted } = fakeEngine({ generationLang: 'id', padBetweenPhrases: false, naturalSpeed: 1, generationSteps: 4 });
     await adapter.generate('Kita mulai ya.', { lang: 'id-ID' });
     assert.ok(posted.length >= 1);
     assert.strictEqual(posted[0].type, 'generateWithConfig');
@@ -188,21 +194,22 @@ async function asyncTest(name, fn) {
     assert.strictEqual(enSteps, idSteps, 'English and Indonesian must ask for the same steps');
   });
 
-  await asyncTest('a praise line is spoken by the hype speaker, an explanation by the other', async () => {
-    const hype = fakeEngine({ generationLang: 'id', usePersona: true, padBetweenPhrases: false, naturalSpeed: 1 });
-    await hype.adapter.generate('Wih, keren banget!', { lang: 'id-ID' });
-    assert.strictEqual(hype.posted[0].genConfig.sid, Persona.PERSONAS.hype.sid);
-
-    const ajar = fakeEngine({ generationLang: 'id', usePersona: true, padBetweenPhrases: false, naturalSpeed: 1 });
-    await ajar.adapter.generate(
-      'Kata a dan kata an itu buat benda yang masih satu, dan yang pendengarnya belum tentu tau.',
-      { lang: 'id-ID' });
-    assert.strictEqual(ajar.posted[0].genConfig.sid, Persona.PERSONAS.ajar.sid);
+  await asyncTest('a praise line and an explanation are spoken by the SAME single voice', async () => {
+    // Used to be two speakers switched by intent. OWNER removed the second voice, so the
+    // intent must no longer change who speaks - that is the whole point of the removal.
+    const praise = fakeEngine({ generationLang: 'id', padBetweenPhrases: false, naturalSpeed: 1 });
+    await praise.adapter.generate('Wih, keren banget!', { lang: 'id-ID', intent: 'pujian' });
+    const explain = fakeEngine({ generationLang: 'id', padBetweenPhrases: false, naturalSpeed: 1 });
+    await explain.adapter.generate('Past simple dipakai buat masa lalu.', { lang: 'id-ID', intent: 'penjelasan' });
+    assert.strictEqual(praise.posted[0].genConfig.sid, 2, 'praise must use the surviving voice');
+    assert.strictEqual(explain.posted[0].genConfig.sid, 2, 'explanation must use the same voice');
+    assert.strictEqual(praise.posted[0].genConfig.sid, explain.posted[0].genConfig.sid,
+      'intent must no longer change the speaker');
   });
 
   await asyncTest('Supertonic does not get the synthetic Piper pause added on top', async () => {
-    const off = fakeEngine({ generationLang: 'id', usePersona: true, padBetweenPhrases: false, naturalSpeed: 1 });
-    const on = fakeEngine({ generationLang: 'id', usePersona: true, padBetweenPhrases: true, naturalSpeed: 1 });
+    const off = fakeEngine({ generationLang: 'id', padBetweenPhrases: false, naturalSpeed: 1 });
+    const on = fakeEngine({ generationLang: 'id', padBetweenPhrases: true, naturalSpeed: 1 });
     const line = 'Halo. Apa kabar?';
     const quiet = await off.adapter.generate(line, { lang: 'id-ID' });
     const padded = await on.adapter.generate(line, { lang: 'id-ID' });
@@ -225,7 +232,9 @@ async function asyncTest(name, fn) {
   // ------------------------------------------------------------- wiring assertions
   test('the bilingual engine is wired into the shell', () => {
     const html = fs.readFileSync('index.html', 'utf8');
-    ['fiezel-voice-persona.js', 'fiezel-genz-script.js', 'fiezel-supertonic-voice.js'].forEach((file) => {
+    // m028-3: fiezel-voice-persona.js was deleted with the second voice; its absence is
+    // asserted in the single-voice contract above.
+    ['fiezel-genz-script.js', 'fiezel-supertonic-voice.js'].forEach((file) => {
       assert.ok(html.includes(file), 'index.html must load ' + file);
     });
     const sw = fs.readFileSync('sw.js', 'utf8');

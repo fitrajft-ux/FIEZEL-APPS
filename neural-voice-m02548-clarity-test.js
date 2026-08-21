@@ -297,12 +297,21 @@ function sine(length, amplitude, sampleRate, hz) {
     assert.ok(probe.played.every(p => p.trim === true), 'joined lines are trimmed so the gap is the only silence');
   });
 
-  await test('a line spoken on its own is played exactly as the model delivered it', async () => {
+  await test('a line spoken on its own is trimmed too, so the book joins up', async () => {
+    // m028-4 reverses the m025-48 rule above, on measurement rather than taste.
+    //
+    // That rule kept a standalone line's tail because the Library reads one sentence per
+    // speak() call and the tail was believed to be the pause between them. Measured on the
+    // shipped engine, the tail is 636ms of model-decided silence and the head another
+    // 401ms - dead air that happens to sit where a pause belongs, on top of the
+    // main-thread round trip the Library already pays. OWNER reports the result as a book
+    // that never joins up. Trimming makes the gap the round trip alone and leaves the
+    // pause something the product can set deliberately instead of inherit.
     const probe = streamingService();
     await probe.service.speak('Cuma satu kalimat saja.', { voice: 'test_voice', lang: 'id-ID', allowFallback: false });
     assert.strictEqual(probe.played.length, 1);
-    assert.strictEqual(probe.played[0].trim, false,
-      'the Library reads one sentence per call; trimming here would remove the pause between them');
+    assert.strictEqual(probe.played[0].trim, true,
+      'a standalone line must not carry the engine dead air into the gap between sentences');
     assert.strictEqual(probe.played[0].continuous, false);
   });
 
@@ -455,17 +464,16 @@ function sine(length, amplitude, sampleRate, hz) {
       }
       terminate() {}
     }
-    const personas = require('./features/neural-voice/fiezel-voice-persona.js');
     const adapter = Adapter.createSherpaVitsAdapter({
       env: { Worker: FakeWorker },
       basePath: 'vendor/test/',
       expectedSpeakers: 10,
       modelId: 'test-model',
-      voiceSids: personas.voiceSids(),
+      voiceSids: { id_natural: 2, tutor_ajar: 2, tutor_hype: 2 },
       defaultVoice: 'id_natural',
       generationLang: 'id',
-      personas,
-      usePersona: true,
+      personas: null,
+      usePersona: false,
       padBetweenPhrases: false,
       usePitchContour: false,
       naturalSpeed: 1,

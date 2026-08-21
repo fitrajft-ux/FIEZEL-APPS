@@ -1,0 +1,783 @@
+<title>Fiezel First Spark</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap');
+
+  :root {
+    --bg: #efe3d3;
+    --paper: #fdf3e2;
+    --ink: #2c1b1c;
+    --ink-soft: #6e5a4f;
+    --muted: #b0a08f;
+    --accent: #7a1e2e;
+    --accent-strong: #4a1119;
+    --accent-soft: #f3e0e0;
+    --gold: #d9a441;
+    --gold-soft: #f8e9c9;
+    --line: #ecdec0;
+    --shadow-btn: 0 4px 0 var(--accent-strong);
+    --shadow-card: 0 1px 2px rgba(44,27,28,0.08), 0 14px 30px -16px rgba(44,27,28,0.32);
+  }
+
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #16100d; --paper: #221a17; --ink: #f3e9dd; --ink-soft: #cdb8ab; --muted: #8a7566;
+      --accent: #d9576a; --accent-strong: #f0839a; --accent-soft: #3a2224;
+      --gold: #e8bd6b; --gold-soft: #3a2f18; --line: #3a2c24;
+      --shadow-btn: 0 4px 0 #a83c4d;
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 14px 30px -16px rgba(0,0,0,0.65);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16100d; --paper: #221a17; --ink: #f3e9dd; --ink-soft: #cdb8ab; --muted: #8a7566;
+    --accent: #d9576a; --accent-strong: #f0839a; --accent-soft: #3a2224;
+    --gold: #e8bd6b; --gold-soft: #3a2f18; --line: #3a2c24;
+    --shadow-btn: 0 4px 0 #a83c4d;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 14px 30px -16px rgba(0,0,0,0.65);
+  }
+
+  * { box-sizing: border-box; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+
+  body {
+    margin: 0; min-height: 100vh;
+    background: radial-gradient(560px 420px at 12% -6%, var(--accent-soft), transparent), radial-gradient(480px 380px at 102% 8%, var(--gold-soft), transparent), var(--bg);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    padding: 36px 16px;
+  }
+
+  .stage-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .caption { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); text-align: center; }
+  .caption b { color: var(--accent); }
+
+  .phone {
+    width: 380px; height: 800px; max-height: 90vh;
+    background: var(--paper); border-radius: 46px;
+    box-shadow: var(--shadow-card); border: 1px solid var(--line);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 108px; height: 26px; background: var(--ink); border-radius: 20px; z-index: 20; opacity: 0.85; }
+
+  .dots { display: flex; justify-content: center; gap: 6px; padding: 22px 0 4px; }
+  .dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background 0.3s ease, width 0.3s ease; }
+  .dots span.active { background: var(--accent); width: 18px; border-radius: 4px; }
+  .dots span.done { background: var(--gold); }
+
+  .steps { position: relative; flex: 1; overflow: hidden; }
+  .step { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 6px 26px 24px; opacity: 0; pointer-events: none; transform: translateX(24px) scale(0.98); transition: opacity 0.4s cubic-bezier(.22,1,.36,1), transform 0.45s cubic-bezier(.22,1,.36,1); }
+  .step.active { opacity: 1; pointer-events: auto; transform: translateX(0) scale(1); }
+  .step.exit-left { opacity: 0; transform: translateX(-24px) scale(0.98); }
+  .step-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 14px; overflow-y: auto; }
+
+  h1.headline, h2.headline { font-family: 'Fredoka', sans-serif; font-weight: 600; text-wrap: balance; text-align: center; margin: 0; color: var(--ink); }
+  h1.headline { font-size: 1.55rem; }
+  h2.headline { font-size: 1.22rem; }
+  p.sub { margin: 0; text-align: center; color: var(--ink-soft); font-size: 0.88rem; line-height: 1.5; max-width: 30ch; }
+
+  .speech {
+    position: relative;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 10px 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+    max-width: 27ch;
+    text-align: center;
+    opacity: 0;
+    animation: chipIn 0.4s cubic-bezier(.34,1.56,.64,1) forwards 0.75s;
+  }
+  .speech::after {
+    content: "";
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%) rotate(45deg);
+    width: 12px; height: 12px; background: var(--paper); border-left: 1.5px solid var(--line); border-top: 1.5px solid var(--line);
+  }
+
+  /* ---------- mascot: real artwork, popup + float ---------- */
+  .mascot-stage { position: relative; width: 176px; height: 176px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .mascot-stage.sm { width: 118px; height: 118px; }
+  .mascot-shadow { position: absolute; bottom: 2px; left: 50%; width: 74px; height: 14px; margin-left: -37px; background: radial-gradient(ellipse, rgba(44,27,28,0.22), transparent 70%); animation: shadowPulse 2.6s ease-in-out infinite; }
+  :root:not([data-theme="light"]) .mascot-shadow { @media (prefers-color-scheme: dark) { background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 70%); } }
+  :root[data-theme="dark"] .mascot-shadow { background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 70%); }
+  @keyframes shadowPulse { 0%, 100% { transform: scaleX(1); opacity: 0.7; } 50% { transform: scaleX(0.82); opacity: 0.4; } }
+
+  .mascot-img {
+    position: relative; z-index: 3; max-width: 82%; max-height: 82%;
+    filter: drop-shadow(0 10px 16px rgba(74,17,25,0.30));
+    opacity: 0;
+    animation: mascotPopIn 0.72s cubic-bezier(.17,.89,.32,1.49) both, mascotFloat 3.1s ease-in-out 0.72s infinite;
+  }
+  .mascot-img.no-float { animation: mascotPopIn 0.72s cubic-bezier(.17,.89,.32,1.49) both; }
+  @keyframes mascotPopIn {
+    0%   { opacity: 0; transform: scale(0.22) rotate(-20deg) translateY(30px); }
+    55%  { opacity: 1; transform: scale(1.1) rotate(5deg) translateY(-6px); }
+    75%  { transform: scale(0.95) rotate(-2deg) translateY(3px); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg) translateY(0); }
+  }
+  @keyframes mascotFloat { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-9px) rotate(1deg); } }
+
+  .mascot-burst {
+    position: absolute; z-index: 1; width: 64px; height: 64px; border-radius: 50%;
+    border: 3px solid var(--gold); opacity: 0; pointer-events: none;
+    animation: burstRing 0.75s ease-out 0.05s both;
+  }
+  .mascot-burst.b2 { border-color: var(--accent); animation-delay: 0.18s; }
+  @keyframes burstRing { 0% { opacity: 0.85; transform: scale(0.35); } 100% { opacity: 0; transform: scale(3.4); } }
+
+  .spark { position: absolute; z-index: 4; opacity: 0; animation: sparkPop 0.55s cubic-bezier(.34,1.56,.64,1) forwards, sparkTwinkle 2s ease-in-out infinite; pointer-events: none; }
+  @keyframes sparkPop { 0% { opacity: 0; transform: scale(0) rotate(0deg); } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
+  @keyframes sparkTwinkle { 0%, 100% { opacity: 0.55; transform: scale(0.82) rotate(-8deg); } 50% { opacity: 1; transform: scale(1.15) rotate(10deg); } }
+  .spark path { fill: var(--gold); }
+  .spark.alt path { fill: var(--accent); }
+
+  .mascot-img.sleep-sway { animation: mascotPopIn 0.72s cubic-bezier(.17,.89,.32,1.49) both, sleepSway 3.6s ease-in-out 0.72s infinite; }
+  @keyframes sleepSway { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-4px) rotate(1.5deg); } }
+  .zzz { position: absolute; z-index: 4; font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--ink-soft); opacity: 0; pointer-events: none; }
+  .zzz.z1 { top: 18px; right: 20px; font-size: 15px; animation: zzzFloat 2.4s ease-in-out 1s infinite; }
+  .zzz.z2 { top: 2px; right: 4px; font-size: 20px; animation: zzzFloat 2.4s ease-in-out 1.5s infinite; }
+  @keyframes zzzFloat { 0% { opacity: 0; transform: translateY(6px) scale(0.7); } 30% { opacity: 0.75; } 100% { opacity: 0; transform: translateY(-16px) scale(1.1); } }
+
+  /* ---------- app init (step 0) ---------- */
+  .init-logo { width: 150px; opacity: 0; animation: wmIn 0.6s cubic-bezier(.22,1,.36,1) forwards; }
+  @keyframes wmIn { from { opacity: 0; transform: translateY(10px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .logo-word { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 58px; fill: var(--accent); }
+  .logo-tagline { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 1.5px; fill: var(--ink-soft); }
+  .mascot-star { animation: starTwinkle 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes starTwinkle { 0%, 100% { transform: scale(0.85) rotate(-6deg); opacity: 0.75; } 50% { transform: scale(1.08) rotate(6deg); opacity: 1; } }
+  .init-bar { width: 140px; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .init-bar-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--gold)); animation: initLoad 1.6s cubic-bezier(.4,0,.2,1) forwards 0.3s; }
+  @keyframes initLoad { to { width: 100%; } }
+  .init-tip { font-size: 0.74rem; color: var(--ink-soft); text-align: center; opacity: 0; animation: chipIn 0.4s ease forwards 0.5s; }
+  @keyframes chipIn { from { opacity: 0; transform: translateY(8px) scale(0.85); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  /* ---------- feature carousel ---------- */
+  .carousel-track { position: relative; width: 100%; height: 190px; }
+  .slide { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; opacity: 0; transform: translateX(16px); transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.22,1,.36,1); pointer-events: none; }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+  .feature-pair { display: flex; gap: 14px; }
+  .feature-chip { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 108px; padding: 16px 10px; border-radius: 18px; background: var(--accent-soft); border: 1px solid var(--line); }
+  .feature-chip .ic { font-size: 1.7rem; }
+  .feature-chip .lb { font-weight: 700; font-size: 0.82rem; color: var(--ink); }
+  .sub-dots { display: flex; gap: 5px; }
+  .sub-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--line); }
+  .sub-dots span.active { background: var(--accent); }
+  .carousel-nav { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+  .carousel-nav button { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; color: var(--accent); }
+  .carousel-nav button:hover { background: var(--gold-soft); }
+  .carousel-nav svg { width: 16px; height: 16px; }
+
+  /* ---------- goal cards ---------- */
+  .goal-grid { display: flex; gap: 10px; width: 100%; }
+  .goal-card { all: unset; box-sizing: border-box; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border: 2px solid var(--line); border-radius: 18px; background: var(--paper); cursor: pointer; transition: border-color 0.18s ease, transform 0.12s ease, background 0.18s ease; text-align: center; }
+  .goal-card .emoji { font-size: 1.6rem; }
+  .goal-card .label { font-weight: 700; font-size: 0.92rem; color: var(--ink); }
+  .goal-card .meta { font-size: 0.7rem; color: var(--muted); }
+  .goal-card:active { transform: scale(0.96); }
+  .goal-card.selected { border-color: var(--accent); background: var(--accent-soft); animation: pickPop 0.32s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes pickPop { 0% { transform: scale(1); } 40% { transform: scale(1.035); } 100% { transform: scale(1); } }
+
+  .score-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.3s ease, max-height 0.3s ease; }
+  .score-row.shown { opacity: 1; max-height: 80px; margin-top: 4px; }
+  .score-chip { all: unset; cursor: pointer; padding: 8px 14px; border-radius: 999px; border: 2px solid var(--line); font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); transition: all 0.15s ease; }
+  .score-chip.selected { border-color: var(--gold); background: var(--gold-soft); color: var(--ink); animation: pickPop 0.32s cubic-bezier(.34,1.56,.64,1); }
+
+  /* ---------- reactive mini avatar (quiz / lesson feedback) ---------- */
+  .rx-row { display: flex; align-items: center; gap: 10px; }
+  .rx-avatar { position: relative; width: 46px; height: 46px; flex: none; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s ease; overflow: hidden; }
+  .rx-avatar img { width: 82%; height: 82%; object-fit: contain; }
+  .rx-avatar.happy { transform: scale(1.14) rotate(-5deg); box-shadow: 0 0 0 3px var(--gold-soft), 0 0 0 5px var(--gold); }
+  .rx-avatar.oops { transform: scale(0.92) rotate(4deg); animation: shakeX 0.4s ease; box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent); }
+  @keyframes shakeX { 0%, 100% { transform: translateX(0) scale(0.92) rotate(4deg); } 25% { transform: translateX(-4px) scale(0.92) rotate(4deg); } 75% { transform: translateX(4px) scale(0.92) rotate(4deg); } }
+  .rx-bubble { flex: 1; font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); }
+
+  /* ---------- placement test ---------- */
+  .quiz-progress { font-size: 0.72rem; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; }
+  .quiz-card { width: 100%; border: 1.5px solid var(--line); border-radius: 18px; padding: 18px; background: var(--paper); box-shadow: var(--shadow-card); }
+  .quiz-q { font-weight: 700; font-size: 1rem; margin: 0 0 14px; text-align: center; }
+  .quiz-opt { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 11px 14px; margin-bottom: 8px; border: 2px solid var(--line); border-radius: 13px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s ease; text-align: left; }
+  .quiz-opt:last-child { margin-bottom: 0; }
+  .quiz-opt.correct { border-color: var(--gold); background: var(--gold-soft); animation: pickPop 0.32s cubic-bezier(.34,1.56,.64,1); }
+  .quiz-opt.wrong-pick { border-color: var(--accent); background: var(--accent-soft); animation: shakeOpt 0.36s ease; }
+  .quiz-opt.dim { opacity: 0.45; }
+  @keyframes shakeOpt { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+  /* ---------- personalization chips ---------- */
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
+  .pz-chip { all: unset; cursor: pointer; padding: 10px 15px; border-radius: 999px; border: 2px solid var(--line); font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); background: var(--paper); transition: all 0.15s ease; }
+  .pz-chip.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); animation: pickPop 0.32s cubic-bezier(.34,1.56,.64,1); }
+
+  /* ---------- schedule ---------- */
+  .day-row { display: flex; gap: 6px; }
+  .day-chip { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 0.74rem; font-weight: 700; border: 2px solid var(--line); color: var(--ink-soft); transition: all 0.15s ease; }
+  .day-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; animation: pickPop 0.32s cubic-bezier(.34,1.56,.64,1); }
+  .time-row { display: flex; gap: 8px; }
+  .time-chip { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 12px; border: 2px solid var(--line); font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); transition: all 0.15s ease; }
+  .time-chip.selected { border-color: var(--gold); background: var(--gold-soft); color: var(--ink); animation: pickPop 0.32s cubic-bezier(.34,1.56,.64,1); }
+  .notif-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 13px 15px; border-radius: 15px; background: var(--accent-soft); border: 1px solid var(--line); }
+  .notif-toggle span { font-size: 0.84rem; font-weight: 700; }
+  .switch { all: unset; width: 42px; height: 24px; border-radius: 999px; background: var(--line); position: relative; cursor: pointer; transition: background 0.2s ease; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.2s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .switch.on { background: var(--gold); }
+  .switch.on::after { transform: translateX(18px); }
+
+  /* ---------- first-launch check ---------- */
+  .check-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .check-card { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 12px; padding: 15px 16px; border: 2px solid var(--line); border-radius: 16px; background: var(--paper); cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease; text-align: left; }
+  .check-card:active { transform: scale(0.98); }
+  .check-card .cc-ic { font-size: 1.4rem; }
+  .check-card .cc-t { font-weight: 700; font-size: 0.9rem; color: var(--ink); display: block; }
+  .check-card .cc-d { font-size: 0.74rem; color: var(--muted); }
+
+  /* ---------- first lesson (mini demo) ---------- */
+  .flashcard { width: 100%; aspect-ratio: 5/3; border-radius: 20px; background: var(--paper); border: 1.5px solid var(--line); box-shadow: var(--shadow-card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+  .flashcard .fc-word { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.5rem; color: var(--accent); }
+  .flashcard .fc-hint { font-size: 0.76rem; color: var(--muted); }
+  .flashcard.flipped .fc-word { color: var(--gold); }
+  .fc-opts { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+
+  /* ---------- summary card ---------- */
+  .summary-card { width: 100%; border: 1.5px solid var(--line); border-radius: 18px; padding: 4px; background: var(--paper); box-shadow: var(--shadow-card); }
+  .summary-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 1rem; flex: none; }
+  .summary-row .tx dt { font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
+  .summary-row .tx dd { margin: 0; font-weight: 700; font-size: 0.88rem; color: var(--ink); }
+
+  .streak-pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px 7px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--ink); font-weight: 700; font-size: 0.84rem; opacity: 0; animation: chipIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay: 0.9s; }
+
+  .confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+
+  /* ---------- home preview ---------- */
+  .home-preview { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+  .home-top { display: flex; align-items: center; gap: 12px; }
+  .home-avatar { width: 52px; height: 52px; flex: none; border-radius: 50%; background: var(--accent-soft); overflow: hidden; display: grid; place-items: center; }
+  .home-avatar img { width: 84%; height: 84%; object-fit: contain; }
+  .hg-hi { margin: 0; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 1.02rem; color: var(--ink); }
+  .hg-sub { margin: 2px 0 0; font-size: 0.78rem; color: var(--ink-soft); }
+  .home-stat-row { display: flex; gap: 8px; }
+  .home-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px; background: var(--accent-soft); border: 1px solid var(--line); }
+  .home-stat .hs-ic { font-size: 1.1rem; }
+  .home-stat .hs-n { font-weight: 700; font-size: 1rem; color: var(--ink); }
+  .home-stat .hs-l { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .home-card { display: flex; flex-direction: column; gap: 3px; padding: 13px 12px; border-radius: 14px; background: var(--paper); border: 1.5px solid var(--line); }
+  .home-card .hc-ic { font-size: 1.2rem; }
+  .home-card .hc-t { font-weight: 700; font-size: 0.82rem; color: var(--ink); }
+  .home-card .hc-d { font-size: 0.68rem; color: var(--muted); }
+
+  .cta-row { width: 100%; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+  .btn { all: unset; box-sizing: border-box; width: 100%; text-align: center; padding: 13px 20px; border-radius: 16px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.2s ease; }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-btn); }
+  .btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--accent-strong); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary:disabled:active { transform: none; box-shadow: var(--shadow-btn); }
+  .btn-ghost { background: transparent; color: var(--ink-soft); font-weight: 600; padding: 6px; font-size: 0.82rem; }
+
+  .skip { position: absolute; top: 46px; right: 20px; z-index: 10; }
+  .rail { position: absolute; top: 46px; left: 20px; z-index: 10; }
+  .rail button { all: unset; cursor: pointer; color: var(--ink-soft); display: grid; place-items: center; width: 26px; height: 26px; }
+</style>
+
+<div class="stage-wrap">
+  <p class="caption">FIEZEL onboarding v4 &middot; real artwork (no vector redraw) &middot; Percik, full app-init&rarr;home flow</p>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="rail" id="backRail" style="display:none;"><button id="backBtn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+    <button class="btn-ghost skip" id="skipBtn">Lewati</button>
+    <div class="dots" id="dots"></div>
+
+    <div class="steps">
+
+      <!-- 1. App init -->
+      <section class="step active" data-step="0">
+        <div class="step-body">
+          <svg class="init-logo" viewBox="0 0 340 112">
+            <text x="170" y="66" text-anchor="middle" class="logo-word">FIEZEL</text>
+            <path class="mascot-star" d="M23 16 Q25.5 22.5 32 25 Q25.5 27.5 23 34 Q20.5 27.5 14 25 Q20.5 22.5 23 16 Z" fill="#d9a441"/>
+            <path d="M64 82 Q170 100 296 76" stroke="#7a1e2e" stroke-width="5" stroke-linecap="round" fill="none"/>
+          </svg>
+          <div class="mascot-stage">
+            <div class="mascot-shadow"></div>
+            <span class="zzz z1">z</span>
+            <span class="zzz z2">Z</span>
+            <img class="mascot-img sleep-sway" src="../../assets/brand/fiezel-istirahat.png" alt="Percik istirahat">
+          </div>
+          <div class="init-bar"><div class="init-bar-fill"></div></div>
+          <p class="init-tip">Menyiapkan pengalaman belajarmu&hellip;</p>
+        </div>
+      </section>
+
+      <!-- 2. Splash & sambutan -->
+      <section class="step" data-step="1">
+        <div class="step-body">
+          <svg class="init-logo" style="animation-delay:0.05s;" viewBox="0 0 340 112">
+            <text x="170" y="66" text-anchor="middle" class="logo-word">FIEZEL</text>
+            <path class="mascot-star" d="M23 16 Q25.5 22.5 32 25 Q25.5 27.5 23 34 Q20.5 27.5 14 25 Q20.5 22.5 23 16 Z" fill="#d9a441"/>
+            <path d="M64 82 Q170 100 296 76" stroke="#7a1e2e" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <text x="170" y="104" text-anchor="middle" class="logo-tagline">YOUR SMART LEARNING COMPANION</text>
+          </svg>
+          <div class="mascot-stage">
+            <div class="mascot-shadow"></div>
+            <div class="mascot-burst"></div>
+            <div class="mascot-burst b2"></div>
+            <svg class="spark" style="top:6px;left:0px;width:20px;height:20px;animation-delay:0.15s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <svg class="spark alt" style="top:14px;right:-4px;width:14px;height:14px;animation-delay:0.32s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <svg class="spark" style="bottom:20px;right:4px;width:16px;height:16px;animation-delay:0.48s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <img class="mascot-img" src="../../assets/brand/fiezel-hero.png" alt="Percik melambai">
+          </div>
+          <div class="splash-speech speech">Hai! Aku temanmu belajar di FIEZEL. Yuk, siap-siap!</div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next>Mulai kenalan</button></div>
+      </section>
+
+      <!-- 3. First-launch check -->
+      <section class="step" data-step="2">
+        <div class="step-body">
+          <div class="mascot-stage sm">
+            <div class="mascot-shadow"></div>
+            <img class="mascot-img" src="../../assets/brand/fiezel-mengintip.png" alt="Percik mengintip">
+          </div>
+          <h2 class="headline">Kamu baru di sini?</h2>
+          <p class="sub">Biar Percik nyiapin jalur yang pas buat kamu.</p>
+          <div class="check-grid">
+            <button class="check-card" data-next id="checkNew">
+              <span class="cc-ic">🌱</span>
+              <span><span class="cc-t">Baru pertama kali</span><span class="cc-d">Mulai dari perkenalan lengkap</span></span>
+            </button>
+            <button class="check-card" id="checkReturning">
+              <span class="cc-ic">👋</span>
+              <span><span class="cc-t">Sudah pernah pakai FIEZEL</span><span class="cc-d">Langsung ke beranda</span></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Onboarding: kenalan singkat -->
+      <section class="step" data-step="3">
+        <div class="step-body">
+          <div class="mascot-stage sm">
+            <div class="mascot-shadow"></div>
+            <img class="mascot-img" src="../../assets/brand/fiezel-belajar.png" alt="Percik belajar">
+          </div>
+          <h2 class="headline">Apa aja yang bisa kamu latih?</h2>
+          <div class="carousel-track" id="carouselTrack">
+            <div class="slide active" data-slide="0">
+              <div class="feature-pair">
+                <div class="feature-chip"><span class="ic">🔤</span><span class="lb">Kosakata</span></div>
+                <div class="feature-chip"><span class="ic">🧩</span><span class="lb">Grammar</span></div>
+              </div>
+              <p class="sub">Di sini kita akan latihan bareng, sedikit demi sedikit tiap hari.</p>
+            </div>
+            <div class="slide" data-slide="1">
+              <div class="feature-pair">
+                <div class="feature-chip"><span class="ic">📖</span><span class="lb">Reading</span></div>
+                <div class="feature-chip"><span class="ic">🎧</span><span class="lb">Listening</span></div>
+              </div>
+              <p class="sub">Suara neural, bukan robot — kedengeran kayak orang beneran ngomong.</p>
+            </div>
+          </div>
+          <div class="carousel-nav">
+            <button id="slidePrev" aria-label="Sebelumnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div class="sub-dots" id="subDots"><span class="active"></span><span></span></div>
+            <button id="slideNext" aria-label="Berikutnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next>Lanjut</button></div>
+      </section>
+
+      <!-- 5. Personalization -->
+      <section class="step" data-step="4">
+        <div class="step-body">
+          <div class="mascot-stage sm">
+            <div class="mascot-shadow"></div>
+            <img class="mascot-img" src="../../assets/brand/fiezel-semangat.png" alt="Percik semangat">
+          </div>
+          <h2 class="headline">Cerita dikit soal kamu</h2>
+          <p class="sub" style="margin-bottom:2px;">Kenapa kamu mau belajar Inggris?</p>
+          <div class="chip-grid" id="motivGrid">
+            <button class="pz-chip" data-motiv="karier">💼 Karier</button>
+            <button class="pz-chip" data-motiv="sekolah">🎓 Sekolah/kuliah</button>
+            <button class="pz-chip" data-motiv="travel">✈️ Travel</button>
+            <button class="pz-chip" data-motiv="hobi">🎬 Hobi/hiburan</button>
+          </div>
+          <p class="sub" style="margin-bottom:2px;margin-top:6px;">Seberapa jauh pengalamanmu?</p>
+          <div class="chip-grid" id="expGrid">
+            <button class="pz-chip" data-exp="pemula">🌱 Pemula banget</button>
+            <button class="pz-chip" data-exp="dasar">📘 Sudah tau dasar</button>
+            <button class="pz-chip" data-exp="lancar">💬 Lumayan lancar</button>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next id="pzNext" disabled>Lanjut</button></div>
+      </section>
+
+      <!-- 6. Placement test -->
+      <section class="step" data-step="5">
+        <div class="step-body">
+          <h2 class="headline">Tes penempatan singkat</h2>
+          <p class="sub">Kerjakan santai aja, ini bukan ujian — cuma buat Percik kenal kemampuanmu.</p>
+          <div class="rx-row">
+            <div class="rx-avatar" id="quizRxFace"><img src="../../assets/brand/fiezel-icon.png" alt="Percik"></div>
+            <span class="rx-bubble" id="quizRxBubble">Ayo dijawab santai aja&hellip;</span>
+          </div>
+          <div class="quiz-progress">Soal 1 / 6</div>
+          <div class="quiz-card" id="quizCard">
+            <p class="quiz-q">"She ___ to the market every morning."</p>
+            <button class="quiz-opt" data-correct="false">go</button>
+            <button class="quiz-opt" data-correct="true">goes</button>
+            <button class="quiz-opt" data-correct="false">going</button>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next id="quizNext" disabled>Lanjut</button></div>
+      </section>
+
+      <!-- 7. Goal setup: target + jadwal -->
+      <section class="step" data-step="6">
+        <div class="step-body">
+          <div class="mascot-stage sm">
+            <div class="mascot-shadow"></div>
+            <img class="mascot-img" src="../../assets/brand/fiezel-jadwal.png" alt="Percik jadwal">
+          </div>
+          <h2 class="headline">Mau kejar target apa dulu?</h2>
+          <p class="sub" style="margin-bottom:2px;">Percik atur jalur belajar sesuai ini.</p>
+          <div class="goal-grid" id="targetGrid">
+            <button class="goal-card" data-goal="ielts"><span class="emoji">🎓</span><span class="label">IELTS</span><span class="meta">Band score</span></button>
+            <button class="goal-card" data-goal="toefl"><span class="emoji">📝</span><span class="label">TOEFL</span><span class="meta">Skor iBT</span></button>
+          </div>
+          <div class="score-row" id="scoreRowIelts">
+            <button class="score-chip" data-score="5.5">5.5</button>
+            <button class="score-chip" data-score="6.0">6.0</button>
+            <button class="score-chip" data-score="6.5">6.5</button>
+            <button class="score-chip" data-score="7.0">7.0+</button>
+          </div>
+          <div class="score-row" id="scoreRowToefl">
+            <button class="score-chip" data-score="60">60</button>
+            <button class="score-chip" data-score="80">80</button>
+            <button class="score-chip" data-score="100">100+</button>
+          </div>
+          <p class="sub" style="margin-bottom:2px;margin-top:8px;">Kapan mau belajar?</p>
+          <div class="day-row" id="dayRow">
+            <button class="day-chip" data-day="Sen">S</button>
+            <button class="day-chip" data-day="Sel">S</button>
+            <button class="day-chip" data-day="Rab">R</button>
+            <button class="day-chip" data-day="Kam">K</button>
+            <button class="day-chip" data-day="Jum">J</button>
+            <button class="day-chip" data-day="Sab">S</button>
+            <button class="day-chip" data-day="Min">M</button>
+          </div>
+          <div class="time-row" id="timeRow">
+            <button class="time-chip" data-time="Pagi">Pagi</button>
+            <button class="time-chip" data-time="Siang">Siang</button>
+            <button class="time-chip" data-time="Malam">Malam</button>
+          </div>
+          <div class="notif-toggle">
+            <span>Pengingat push notification</span>
+            <button class="switch" id="notifSwitch" aria-label="Aktifkan notifikasi"></button>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next id="targetNext" disabled>Lanjut</button></div>
+      </section>
+
+      <!-- 8. First lesson (mini demo) -->
+      <section class="step" data-step="7">
+        <div class="step-body">
+          <div class="mascot-stage sm">
+            <div class="mascot-shadow"></div>
+            <img class="mascot-img" src="../../assets/brand/fiezel-menulis.png" alt="Percik menulis">
+          </div>
+          <h2 class="headline">Coba pelajaran pertamamu</h2>
+          <p class="sub" style="margin-bottom:2px;">Ketuk kartunya buat lihat artinya.</p>
+          <div class="flashcard" id="flashcard">
+            <span class="fc-word">Journey</span>
+            <span class="fc-hint">Ketuk untuk lihat arti</span>
+          </div>
+          <div class="fc-opts" id="fcOpts" style="display:none;">
+            <button class="quiz-opt" data-correct="false">Rumah</button>
+            <button class="quiz-opt" data-correct="true">Perjalanan</button>
+            <button class="quiz-opt" data-correct="false">Makanan</button>
+          </div>
+          <div class="rx-row" id="lessonRxRow" style="display:none;">
+            <div class="rx-avatar" id="lessonRxFace"><img src="../../assets/brand/fiezel-icon.png" alt="Percik"></div>
+            <span class="rx-bubble" id="lessonRxBubble">Yuk coba jawab!</span>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next id="lessonNext" disabled>Lanjut</button></div>
+      </section>
+
+      <!-- 9. Celebration -->
+      <section class="step" data-step="8">
+        <div class="step-body">
+          <div class="mascot-stage">
+            <div class="mascot-shadow"></div>
+            <div class="mascot-burst"></div>
+            <div class="mascot-burst b2"></div>
+            <svg class="spark" style="top:2px;left:2px;width:20px;height:20px;animation-delay:0.15s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <svg class="spark alt" style="top:10px;right:-2px;width:16px;height:16px;animation-delay:0.3s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <svg class="spark" style="bottom:14px;left:-4px;width:15px;height:15px;animation-delay:0.42s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <svg class="spark alt" style="bottom:24px;right:6px;width:13px;height:13px;animation-delay:0.55s;" viewBox="0 0 24 24"><path d="M12 0 Q14 9 24 12 Q14 15 12 24 Q10 15 0 12 Q10 9 12 0 Z"/></svg>
+            <img class="mascot-img" src="../../assets/brand/fiezel-pencapaian.png" alt="Percik dapat piala">
+          </div>
+          <h1 class="headline">Kamu keren banget!</h1>
+          <p class="sub">Latihan pertama kelar. Ini baru permulaan.</p>
+          <div class="summary-card">
+            <div class="summary-row"><span class="ic">📊</span><dl class="tx"><dt>Level awal</dt><dd id="sumLevel">B1</dd></dl></div>
+            <div class="summary-row"><span class="ic">🎯</span><dl class="tx"><dt>Target</dt><dd id="sumTarget">&mdash;</dd></dl></div>
+            <div class="summary-row"><span class="ic">🗓️</span><dl class="tx"><dt>Jadwal</dt><dd id="sumSchedule">&mdash;</dd></dl></div>
+          </div>
+          <span class="streak-pill">🔥 Streak hari ke-1 dimulai</span>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" data-next>Lihat beranda</button></div>
+      </section>
+
+      <!-- 10. Home preview -->
+      <section class="step" data-step="9">
+        <div class="step-body">
+          <div class="home-preview">
+            <div class="home-top">
+              <div class="home-avatar"><img src="../../assets/brand/fiezel-icon.png" alt="Percik"></div>
+              <div class="home-greet">
+                <p class="hg-hi">Halo, Sobat Fiezel!</p>
+                <p class="hg-sub">Siap lanjut belajar hari ini?</p>
+              </div>
+            </div>
+            <div class="mascot-stage sm" style="align-self:center;">
+              <div class="mascot-shadow"></div>
+              <img class="mascot-img" src="../../assets/brand/fiezel-siap.png" alt="Percik siap">
+            </div>
+            <div class="home-stat-row">
+              <div class="home-stat"><span class="hs-ic">🔥</span><span class="hs-n">1</span><span class="hs-l">Streak</span></div>
+              <div class="home-stat"><span class="hs-ic">⭐</span><span class="hs-n">20</span><span class="hs-l">XP</span></div>
+              <div class="home-stat"><span class="hs-ic">📊</span><span class="hs-n" id="homeLevel">B1</span><span class="hs-l">Level</span></div>
+            </div>
+            <div class="home-cards">
+              <div class="home-card"><span class="hc-ic">🔤</span><span class="hc-t">Kosakata</span><span class="hc-d">5 kartu baru</span></div>
+              <div class="home-card"><span class="hc-ic">🧩</span><span class="hc-t">Grammar</span><span class="hc-d">Lanjut lesson 2</span></div>
+              <div class="home-card"><span class="hc-ic">📖</span><span class="hc-t">Reading</span><span class="hc-d">Cerita baru siap</span></div>
+              <div class="home-card"><span class="hc-ic">🎧</span><span class="hc-t">Listening</span><span class="hc-d">Latihan suara neural</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn btn-primary" id="finishBtn">Masuk ke FIEZEL</button></div>
+      </section>
+
+    </div>
+  </div>
+  <p class="caption" id="stepCaption"></p>
+</div>
+
+<canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+
+<script>
+  const steps = Array.from(document.querySelectorAll('.step'));
+  const total = steps.length;
+  const captions = ['App init', 'Splash & sambutan', 'First-launch check', 'Kenalan singkat', 'Personalisasi', 'Tes penempatan', 'Target & jadwal', 'Pelajaran pertama', 'Perayaan', 'Beranda'];
+  const dotsWrap = document.getElementById('dots');
+  captions.forEach(() => dotsWrap.appendChild(document.createElement('span')));
+  const dots = Array.from(dotsWrap.children);
+  const stepCaption = document.getElementById('stepCaption');
+  const backRail = document.getElementById('backRail');
+  const skipBtn = document.getElementById('skipBtn');
+  let current = 0;
+
+  function updateChrome() {
+    dots.forEach((d, i) => { d.classList.toggle('active', i === current); d.classList.toggle('done', i < current); });
+    stepCaption.textContent = (current + 1) + ' / ' + total + ' · ' + captions[current];
+    backRail.style.display = current > 0 ? 'block' : 'none';
+    skipBtn.style.display = current < total - 1 ? 'block' : 'none';
+  }
+
+  // ---- step 0: app init -> auto-advance to splash ----
+  setTimeout(() => { if (current === 0) goTo(1); }, 2200);
+
+  // ---- step 2: first-launch check ----
+  const checkReturning = document.getElementById('checkReturning');
+  if (checkReturning) checkReturning.addEventListener('click', () => goTo(total - 1));
+
+  function replayMascotPop(stepEl) {
+    const img = stepEl.querySelector('.mascot-img');
+    if (!img) return;
+    img.style.animation = 'none';
+    void img.offsetWidth;
+    img.style.animation = '';
+    stepEl.querySelectorAll('.mascot-burst, .spark').forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+  }
+
+  function goTo(index) {
+    if (index === current || index < 0 || index > total - 1) return;
+    const dir = index > current ? 1 : -1;
+    const from = steps[current], to = steps[index];
+    from.classList.remove('active');
+    if (dir > 0) from.classList.add('exit-left'); else from.style.transform = 'translateX(24px) scale(0.98)';
+    setTimeout(() => { from.classList.remove('exit-left'); from.style.transform = ''; }, 460);
+    to.classList.add('active');
+    current = index;
+    updateChrome();
+    replayMascotPop(to);
+    if (index === total - 2) setTimeout(burstConfetti, 200);
+  }
+
+  document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', () => goTo(current + 1)));
+  document.getElementById('backBtn').addEventListener('click', () => goTo(current - 1));
+  skipBtn.addEventListener('click', () => goTo(total - 1));
+  document.getElementById('finishBtn').addEventListener('click', () => burstConfetti());
+
+  // ---- carousel ----
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const subDots = Array.from(document.querySelectorAll('#subDots span'));
+  let slideIdx = 0;
+  function showSlide(i) {
+    slideIdx = (i + slides.length) % slides.length;
+    slides.forEach((s, n) => s.classList.toggle('active', n === slideIdx));
+    subDots.forEach((d, n) => d.classList.toggle('active', n === slideIdx));
+  }
+  document.getElementById('slideNext').addEventListener('click', () => showSlide(slideIdx + 1));
+  document.getElementById('slidePrev').addEventListener('click', () => showSlide(slideIdx - 1));
+
+  // ---- personalization ----
+  let chosenMotiv = null, chosenExp = null;
+  function checkPz() { document.getElementById('pzNext').disabled = !(chosenMotiv && chosenExp); }
+  document.querySelectorAll('#motivGrid .pz-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#motivGrid .pz-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      chosenMotiv = chip.dataset.motiv;
+      checkPz();
+    });
+  });
+  document.querySelectorAll('#expGrid .pz-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#expGrid .pz-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      chosenExp = chip.dataset.exp;
+      checkPz();
+    });
+  });
+
+  // ---- target + score ----
+  let chosenTarget = null, chosenScore = null;
+  document.querySelectorAll('#targetGrid .goal-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('#targetGrid .goal-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      chosenTarget = card.dataset.goal;
+      chosenScore = null;
+      document.querySelectorAll('.score-chip').forEach(c => c.classList.remove('selected'));
+      document.getElementById('scoreRowIelts').classList.toggle('shown', chosenTarget === 'ielts');
+      document.getElementById('scoreRowToefl').classList.toggle('shown', chosenTarget === 'toefl');
+      document.getElementById('targetNext').disabled = true;
+    });
+  });
+  document.querySelectorAll('.score-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.parentElement.querySelectorAll('.score-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      chosenScore = chip.dataset.score;
+      document.getElementById('targetNext').disabled = false;
+      document.getElementById('sumTarget').textContent = (chosenTarget === 'ielts' ? 'IELTS band ' : 'TOEFL iBT ') + chosenScore;
+    });
+  });
+
+  // ---- placement question ----
+  const quizRxFace = document.getElementById('quizRxFace');
+  const quizRxBubble = document.getElementById('quizRxBubble');
+  document.querySelectorAll('#quizCard .quiz-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const opts = Array.from(document.querySelectorAll('#quizCard .quiz-opt'));
+      const isRight = opt.dataset.correct === 'true';
+      opts.forEach(o => { o.disabled = true; if (o.dataset.correct === 'true') o.classList.add('correct'); else if (o === opt) o.classList.add('wrong-pick'); else o.classList.add('dim'); });
+      document.getElementById('quizNext').disabled = false;
+      if (quizRxFace) {
+        quizRxFace.classList.remove('happy', 'oops');
+        quizRxFace.classList.add(isRight ? 'happy' : 'oops');
+        quizRxBubble.textContent = isRight ? 'Betul! Kamu jago.' : 'Hampir! Lanjut aja, santai.';
+      }
+    });
+  });
+
+  // ---- first lesson flashcard ----
+  const flashcard = document.getElementById('flashcard');
+  if (flashcard) {
+    flashcard.addEventListener('click', () => {
+      if (flashcard.classList.contains('flipped')) return;
+      flashcard.classList.add('flipped');
+      flashcard.querySelector('.fc-word').textContent = 'Journey = Perjalanan';
+      flashcard.querySelector('.fc-hint').textContent = 'Sekarang coba jawab ini';
+      document.getElementById('fcOpts').style.display = 'flex';
+      document.getElementById('lessonRxRow').style.display = 'flex';
+    });
+  }
+  const lessonRxFace = document.getElementById('lessonRxFace');
+  const lessonRxBubble = document.getElementById('lessonRxBubble');
+  document.querySelectorAll('#fcOpts .quiz-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const opts = Array.from(document.querySelectorAll('#fcOpts .quiz-opt'));
+      const isRight = opt.dataset.correct === 'true';
+      opts.forEach(o => { o.disabled = true; if (o.dataset.correct === 'true') o.classList.add('correct'); else if (o === opt) o.classList.add('wrong-pick'); else o.classList.add('dim'); });
+      document.getElementById('lessonNext').disabled = false;
+      if (lessonRxFace) {
+        lessonRxFace.classList.remove('happy', 'oops');
+        lessonRxFace.classList.add(isRight ? 'happy' : 'oops');
+        lessonRxBubble.textContent = isRight ? 'Yes! Pelajaran pertama sukses.' : 'Gapapa, ini baru latihan pertama.';
+      }
+    });
+  });
+
+  // ---- schedule ----
+  const selectedDays = new Set();
+  document.querySelectorAll('.day-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('selected');
+      if (chip.classList.contains('selected')) selectedDays.add(chip.dataset.day); else selectedDays.delete(chip.dataset.day);
+      updateScheduleSummary();
+    });
+  });
+  let selectedTime = null;
+  document.querySelectorAll('.time-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selectedTime = chip.dataset.time;
+      updateScheduleSummary();
+    });
+  });
+  function updateScheduleSummary() {
+    const days = Array.from(selectedDays);
+    const text = (days.length ? days.join(', ') : 'Belum dipilih') + (selectedTime ? ' · ' + selectedTime : '');
+    document.getElementById('sumSchedule').textContent = text;
+  }
+  const notifSwitch = document.getElementById('notifSwitch');
+  notifSwitch.addEventListener('click', () => notifSwitch.classList.toggle('on'));
+
+  // ---- confetti ----
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  function fitCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  fitCanvas(); window.addEventListener('resize', fitCanvas);
+  const colors = ['#7a1e2e', '#d9a441', '#fdf3e2', '#e7b7bb'];
+  let particles = [], rafId = null;
+  function burstConfetti() {
+    const rect = document.querySelector('.phone').getBoundingClientRect();
+    const originX = rect.left + rect.width / 2, originY = rect.top + 110;
+    for (let i = 0; i < 70; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.8;
+      const speed = 3 + Math.random() * 6;
+      particles.push({ x: originX, y: originY, vx: Math.cos(angle) * speed * (Math.random() > 0.5 ? 1 : -1), vy: -Math.abs(Math.sin(angle) * speed) - 2, size: 5 + Math.random() * 5, color: colors[Math.floor(Math.random() * colors.length)], rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3, life: 0, shape: Math.random() > 0.5 ? 'rect' : 'circle' });
+    }
+    if (!rafId) tick();
+  }
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.vy += 0.14; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life += 1; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, 1 - p.life / 130); ctx.fillStyle = p.color; if (p.shape === 'rect') ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66); else { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); });
+    particles = particles.filter(p => p.life < 130 && p.y < canvas.height + 40);
+    if (particles.length) rafId = requestAnimationFrame(tick); else { rafId = null; ctx.clearRect(0, 0, canvas.width, canvas.height); }
+  }
+
+  updateChrome();
+</script>

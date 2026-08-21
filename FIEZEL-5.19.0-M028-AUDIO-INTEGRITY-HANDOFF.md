@@ -139,3 +139,66 @@ M028 tidak mengklaim:
 Roadmap berikut tetap:
 
 `M028 renderer + latency repair -> M029 true PCM streaming -> stress test long text -> model-quality/expressiveness repair -> Local Qwen`
+
+---
+
+## 7. M028-2 — LEAD-IN SILENCE (follow-up di atas M028 yang sudah merged)
+
+- Status: `implemented_pending_verification`
+- Otoritas: OWNER directive ke sesi HELPER:APEX; dicatat di #12 comment 5341643463 dan 5341877568
+- Base: `main` setelah PR #82 merged
+- Release marker: `DIAG_BUILD m025-50`, `SW_REV m025-50-lead-in-trim-20260819-1`
+
+### Bukti: engine dijalankan offline
+
+`vendor/supertonic-3/sherpa-onnx-wasm-main-tts.js` punya jalur Emscripten untuk Node, jadi
+engine yang benar-benar dikirim ke produksi bisa dijalankan tanpa perangkat: file model
+ditulis ke FS WASM persis seperti `sherpa-onnx-tts.worker.js`, dan `createOfflineTts`
+dibangun dengan config identik. Tidak ada file `vendor/` yang diubah.
+
+Setiap render dimulai dengan senyap di bawah silence floor sebelum sampel ucapan pertama:
+
+| chars | gen ms | audio s | RTF | lead-in ms | tail ms | peak | clipped | impulses | max jump |
+|---|---|---|---|---|---|---|---|---|---|
+| 9 | 2534 | 1.40 | 1.81 | 215 | 434 | 0.317 | 0 | 0 | 0.092 |
+| 15 | 2187 | 1.59 | 1.37 | 372 | 502 | 0.380 | 0 | 0 | 0.129 |
+| 22 | 2206 | 2.00 | 1.11 | 318 | 443 | 0.244 | 0 | 0 | 0.091 |
+| 41 | 9834 | 3.05 | 3.22 | 344 | 661 | 0.346 | 0 | 0 | 0.134 |
+| 80 | 19462 | 5.73 | 3.39 | 557 | 638 | 0.362 | 0 | 0 | 0.112 |
+
+### Perubahan
+
+`trim: joined` berarti ucapan satu chunk tidak pernah di-trim, jadi dead air itu diputar
+utuh sebelum ada bunyi — persis kasus balasan pendek, tempat delay paling terasa.
+`trimSilence()` kini memisahkan kepala dari ekor: kepala selalu di-trim pada jalur
+streaming, ekor tetap memakai kebijakan m025-47 karena untuk baris tunggal ekor itulah
+penjarak antar kalimat Library. Default tanpa opsi tidak berubah.
+
+Diukur pada PCM engine asli: **sampel ucapan pertama datang 401 ms lebih awal.**
+
+### Klasifikasi crackle diperbarui
+
+```yaml
+crackle_source:
+  model_pcm: RULED_OUT_BY_MEASUREMENT
+  remaining: playback/scheduling path
+```
+
+PCM model mentah: nol clipping, nol non-finite, nol impuls, lompatan antar-sampel maksimum
+0,09–0,13 melawan p99 0,03. `conditionSamples()` mengembalikannya by identity. Tiga
+mekanisme lain dieliminasi: `prosody.resample` tidak aktif (`usePitchContour: false`),
+sambungan frasa memakai crossfade 6 ms, dan perbaikan impuls tidak mengubah satu pun sampel
+pada nada 220 Hz/6 kHz/12 kHz maupun noise fricative 0,5 dan 0,9.
+
+Batas klaim: x86 desktop WASM single-thread, 5 ucapan, `sid 0` Inggris. Model bukan lagi
+tersangka utama; ini bukan berarti tereliminasi mutlak untuk semua perangkat/suara/panjang.
+
+### Amandemen scope
+
+Jalur streaming lintas platform, jadi ini mengubah playback non-Apple juga. Ditandai
+eksplisit, bukan diselipkan. Chunk policy, worklet, dan asset SW tidak tersentuh.
+
+### Lanjutan
+
+Belum ada bukti perangkat fisik dan tidak ada klaim audible. Langkah berikut tidak berubah:
+`M029 true PCM streaming -> stress test long text -> model-quality/expressiveness repair`.
