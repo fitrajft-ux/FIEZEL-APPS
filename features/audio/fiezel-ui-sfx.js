@@ -95,6 +95,17 @@
       var Ctx = env.AudioContext || env.webkitAudioContext;
       if (!Ctx) return false;
       ctx = new Ctx();
+      // m025-84 OWNER: "saat splash juga belum ada sfx sound nya". Browser selalu membuat
+      // AudioContext baru dalam keadaan 'suspended' sampai ada sentuhan pengguna - baris di
+      // atas (cabang `if (ctx)`) sudah menangani itu untuk context yang DIPAKAI ULANG, tapi
+      // context yang BARU DIBUAT di sini tidak pernah diminta resume() sama sekali. Splash
+      // adalah pemakai PERTAMA modul ini di setiap peluncuran (tampil sebelum tombol apa pun
+      // ditekan), jadi setiap kali ia jadi yang membuat context ini, notenya dijadwalkan ke
+      // context yang tidak pernah benar-benar berjalan - bunyi hilang tanpa jejak. resume()
+      // di sini tidak dijamin berhasil tanpa gestur (aturan autoplay tetap berlaku), tapi
+      // tanpa panggilan ini context BARU pasti gagal - dengan ini ia setidaknya punya
+      // kesempatan yang sama seperti context yang dipakai ulang.
+      if (ctx.state === 'suspended' && typeof ctx.resume === 'function') ctx.resume();
 
       master = ctx.createGain();
       master.gain.value = 0.5;

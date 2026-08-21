@@ -3,7 +3,7 @@ importScripts('./version.js');
 // mutable application-shell generations to it: prepared neural assets must survive
 // a shell release without being rewritten underneath a live document.
 const CACHE=`fiezel-v${self.FIEZEL_VERSION}`;
-const SW_REV='m025-83-puter-login-coop-fix-20260821-1';
+const SW_REV='m025-84-splash-sfx-autoplay-and-ios-copy-20260821-1';
 const SHELL_CACHE=`fiezel-shell-${SW_REV}`;
 // m025-61: health check menanyakan revisi shell langsung ke worker yang sedang aktif.
 // Menebaknya dari nama cache tidak cukup: cache lama bisa tertinggal, sedangkan jawaban ini

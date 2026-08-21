@@ -542,14 +542,33 @@ function hideNotificationGate(){const gate=$('welcome');if(!gate)return;gate.cla
 // so sign-in errors read the same way AI errors already do elsewhere in the app.
 function puterAuthAvailable(){return typeof puter!=='undefined'&&!!puter?.auth}
 function puterSignedIn(){try{return puterAuthAvailable()&&puter.auth.isSignedIn?.()===true}catch{return false}}
+// m025-84 OWNER: iPhone/iPad Home Screen (standalone) TIDAK BISA menampilkan popup login
+// di atas aplikasi - itu batasan WebKit/iOS sendiri, bukan sesuatu yang bisa dicegah lewat
+// kode di sini: window.open() dari app standalone SELALU lompat ke Safari penuh, apa pun
+// COOP-nya. Yang bisa dijamin FIEZEL cuma jalan pulangnya: presentPuterAuthGateIfNeeded()
+// sudah mendengarkan visibilitychange dan otomatis menyambungkan gerbang begitu murid
+// kembali ke ikon FIEZEL dalam keadaan sudah login (dikonfirmasi OWNER: alurnya jalan).
+// Naskah di sini karena itu HARUS jujur tentang lompatan itu, bukan menjanjikan "tidak akan
+// dipindahkan ke browser lain" - itu benar untuk popup desktop/Android, tapi salah untuk
+// standalone iOS.
+function standaloneDisplay(env){
+  var target=env||(typeof window!=='undefined'?window:{});
+  try{
+    if(target.navigator&&target.navigator.standalone===true)return true; // iOS Home Screen
+    return !!(typeof target.matchMedia==='function'&&target.matchMedia('(display-mode: standalone)').matches);
+  }catch{return false}
+}
 function setAuthGateState(status,detail){
-  const gate=$('authGate'),button=$('authGateButton'),stateText=$('authGateStatus');if(!gate)return;
+  const gate=$('authGate'),button=$('authGateButton'),stateText=$('authGateStatus'),help=$('authGateHelp');if(!gate)return;
   // Sama seperti gerbang notifikasi: akun yang sudah tersambung tidak boleh memunculkan
   // panel hanya untuk ditutup lagi sesaat kemudian (m025-80).
   const wasHidden=gate.classList.contains('hidden');
   if(!(wasHidden&&status==='signed_in')){
     gate.classList.remove('hidden');(window.requestAnimationFrame||setTimeout)(()=>gate.classList.add('show'));
   }
+  if(help)help.textContent=standaloneDisplay()
+    ?'Kamu akan diarahkan sebentar ke Safari/Chrome untuk masuk. Setelah selesai, buka lagi FIEZEL dari ikon ini - langsung tersambung otomatis.'
+    :'Jendela login Puter terbuka sebentar di atas FIEZEL, lalu tertutup sendiri begitu selesai.';
   // Audit UX Bagian 3: status login adalah komponen sendiri (.auth-status), bukan alert
   // bawaan browser, dan naskahnya tidak menyapa nama murid.
   if(status==='signed_in'){stateText.textContent='Akun tersambung. Membuka FIEZEL…';stateText.className='auth-status success';button.disabled=true;button.innerHTML='<i data-lucide="circle-check-big"></i><span>Tersambung</span>'}
