@@ -9,18 +9,33 @@ html.fiezel-ui-v6{--ui-bg:#f3f6fb;--ui-surface:rgba(255,255,255,.90);--ui-surfac
    --ui-* sekarang punya kembaran gelap, dan permukaan yang tadinya dipaku terang membacanya. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]).fiezel-ui-v6{--ui-bg:#150c11;--ui-surface:rgba(32,21,26,.90);--ui-surface-rgb:32,21,26;--ui-tint-soft:#241a26;--ui-chrome-dusk:rgba(28,16,21,.84);--ui-shimmer-a:#2a1f26;--ui-shimmer-b:#352836;--ui-surface-strong:#20151a;--ui-line:rgba(255,232,236,.13);--ui-edge:rgba(255,232,236,.14);--ui-chrome:rgba(28,16,21,.82);--ui-tint:#241a20;--ui-tint-cool:#1e1c26;--ui-tint-line:#33262c;--ui-hero:linear-gradient(145deg,#241820 0%,#1d1620 55%,#191723 100%);--ui-bundle:linear-gradient(135deg,rgba(30,41,66,.92),rgba(37,30,58,.92));--ui-bundle-line:rgba(143,178,255,.22);--ui-text:#fdf4f6;--ui-muted:#c3aeb5;--ui-ink-soft:#c9b8bf;--ui-accent:#8fb2ff;--ui-accent-soft:#1e2942;--ui-indigo:#a89bff;--ui-teal:#4fc7b8;--ui-warn:#e2a44f;--ui-track:#2d2129;--ui-shadow:0 18px 55px rgba(0,0,0,.45)}}
 :root[data-theme="dark"].fiezel-ui-v6{--ui-bg:#150c11;--ui-surface:rgba(32,21,26,.90);--ui-surface-rgb:32,21,26;--ui-tint-soft:#241a26;--ui-chrome-dusk:rgba(28,16,21,.84);--ui-shimmer-a:#2a1f26;--ui-shimmer-b:#352836;--ui-surface-strong:#20151a;--ui-line:rgba(255,232,236,.13);--ui-edge:rgba(255,232,236,.14);--ui-chrome:rgba(28,16,21,.82);--ui-tint:#241a20;--ui-tint-cool:#1e1c26;--ui-tint-line:#33262c;--ui-hero:linear-gradient(145deg,#241820 0%,#1d1620 55%,#191723 100%);--ui-bundle:linear-gradient(135deg,rgba(30,41,66,.92),rgba(37,30,58,.92));--ui-bundle-line:rgba(143,178,255,.22);--ui-text:#fdf4f6;--ui-muted:#c3aeb5;--ui-ink-soft:#c9b8bf;--ui-accent:#8fb2ff;--ui-accent-soft:#1e2942;--ui-indigo:#a89bff;--ui-teal:#4fc7b8;--ui-warn:#e2a44f;--ui-track:#2d2129;--ui-shadow:0 18px 55px rgba(0,0,0,.45)}
-html.fiezel-ui-v6 body{background:radial-gradient(circle at 8% 5%,rgba(91,155,236,.18),transparent 27rem),radial-gradient(circle at 92% 18%,rgba(113,91,218,.14),transparent 30rem),var(--ui-bg)}
+/* m025-113 (brief redesign 4). Dua kabut radial di bawah ini BIRU (#5b9bec, #715bda) -
+   sisa palet v6 lama - dan merekalah yang membuat marun merek terbaca lumpur di setiap
+   layar. Diganti satu kabut marun tunggal dengan bobot yang sama, jadi kedalamannya tetap
+   ada tetapi warnanya hanya satu keluarga. */
+html.fiezel-ui-v6 body{background:radial-gradient(circle at 12% 0%,rgba(140,34,51,.10),transparent 30rem),var(--ui-bg)}
 html.fiezel-ui-v6 .global-sky{opacity:.58;filter:saturate(.72)}
 html.fiezel-ui-v6 .app{max-width:1120px;padding:18px 22px calc(112px + env(safe-area-inset-bottom))}
-html.fiezel-ui-v6 .topbar{position:sticky;top:10px;z-index:35;padding:10px 12px;margin:0 0 18px;border:1px solid var(--ui-edge);border-radius:18px;background:var(--ui-chrome);box-shadow:0 10px 32px rgba(29,49,78,.07);backdrop-filter:blur(20px) saturate(1.35)}
+/* m025-113: topbar memakai --chrome-bg (sadar fase langit) alih-alih --ui-chrome yang
+   dipaku terang. Tintanya var(--ambient-text) yang MEMANG ikut fase langit; memasangkan
+   tinta sadar-fase dengan permukaan yang tidak sadar fase persis itulah yang membuat
+   wordmark FIEZEL nyaris hilang pukul 22.00 di tema terang. */
+html.fiezel-ui-v6 .topbar{position:sticky;top:10px;z-index:35;padding:10px 12px;margin:0 0 18px;border:1px solid var(--glass-edge);border-radius:18px;background:var(--chrome-bg);box-shadow:0 10px 32px rgba(29,49,78,.07);backdrop-filter:blur(20px) saturate(1.35)}
 html.fiezel-ui-v6 .brand-edition{font-size:.62rem;letter-spacing:.09em;text-transform:uppercase}
 html.fiezel-ui-v6 .section-head{align-items:flex-end;margin:8px 0 18px}
 html.fiezel-ui-v6 .section-head h1{font-size:clamp(1.65rem,4vw,2.25rem)}
-html.fiezel-ui-v6 .card,html.fiezel-ui-v6 .stats>div{border:1px solid var(--ui-line);box-shadow:0 8px 28px rgba(29,49,78,.055)}
+html.fiezel-ui-v6 .card,html.fiezel-ui-v6 .stats>div{border:1px solid var(--glass-line);box-shadow:0 8px 28px rgba(29,49,78,.055)}
 html.fiezel-ui-v6 .card{border-radius:22px}
 html.fiezel-ui-v6 .hero{background:var(--ui-hero)}
 html.fiezel-ui-v6 .launch-grid{gap:12px}
-html.fiezel-ui-v6 .launch-card{min-height:112px;border-radius:20px;border:1px solid var(--ui-line);background:rgba(var(--ui-surface-rgb),.88);box-shadow:0 8px 24px rgba(29,49,78,.045)}
+/* m025-113 BUG KONTRAS 1,05:1 (dilaporkan OWNER sebagai "berantakan dari atas sampai
+   bawah"): latar kartu diambil dari --ui-surface-rgb yang hanya sadar TEMA, sedangkan
+   tintanya dari --glass-text yang sadar FASE LANGIT. Pukul 22.00 di tema terang kartunya
+   putih dan tintanya juga hampir putih - judul "Vocabulary" benar-benar tidak terbaca.
+   Kombinasi terang+malam ini sengaja tidak diuji contrast-test m025-85; sekarang diuji.
+   Latar dan tinta kini datang dari keluarga yang sama, jadi keduanya selalu bergerak
+   bersama-sama. */
+html.fiezel-ui-v6 .launch-card{min-height:112px;border-radius:20px;border:1px solid var(--glass-line);background:var(--glass-thick);color:var(--glass-text);box-shadow:0 8px 24px rgba(29,49,78,.045)}
 html.fiezel-ui-v6 .launch-card:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(29,49,78,.10)}
 html.fiezel-ui-v6 .launch-card .launch-icon{border-radius:15px}
 html.fiezel-ui-v6 .privacy-strip{border-radius:20px}
@@ -36,7 +51,11 @@ html.fiezel-ui-v6 .primary{background:linear-gradient(135deg,#4a1a26,#241016);bo
 .tutor-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--ui-accent),var(--ui-indigo));border-radius:inherit;transition:width .35s ease}
 .tutor-bundle{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:18px 20px;margin-bottom:14px;border:1px solid var(--ui-bundle-line);border-radius:22px;background:var(--ui-bundle)}
 .tutor-bundle h3{margin:.25rem 0 .25rem;font-size:1.1rem}.tutor-bundle p{margin:0;color:var(--ui-muted);font-size:.82rem;line-height:1.55;max-width:700px}.tutor-bundle button.bundle-ready{color:#087a5a;background:#e9faf3;border-color:#bdebdc}
-.tutor-hub{padding:clamp(18px,3vw,28px);border:1px solid var(--ui-line);border-radius:28px;background:rgba(var(--ui-surface-rgb),.82);box-shadow:var(--ui-shadow)}
+/* m025-113: papan Classroom dulu 82% tembus pandang. Selama tanah halaman selalu terang
+   itu tidak kelihatan; sejak tanah ikut fase langit, malam hari permukaannya turun ke
+   #d6d5d7 dan --ui-muted di atasnya tinggal 3,18:1. Permukaannya dibuat pekat - tampilan
+   siangnya tidak bergeser satu piksel pun (82% putih di atas terang praktis sudah putih). */
+.tutor-hub{padding:clamp(18px,3vw,28px);border:1px solid var(--ui-line);border-radius:28px;background:var(--ui-surface-strong);box-shadow:var(--ui-shadow)}
 .tutor-hub>section h2{font-size:clamp(1.5rem,4vw,2.3rem);letter-spacing:-.04em;margin:.25rem 0 .4rem}.tutor-hub>section p{color:var(--ui-muted);margin:0 0 18px}
 .tutor-subject-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .tutor-subject{display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:12px;min-height:104px;padding:15px;text-align:left;background:var(--ui-surface-strong);border:1px solid var(--ui-line)}

@@ -30,12 +30,17 @@
  * bentuk persis dari akar A, dan tanpa gerbang itu bug yang sama bisa masuk lagi lewat
  * satu baris CSS baru tanpa satu pun tes memerah.
  *
- * Lingkup yang disengaja: fase langit yang diuji adalah `scene-day` untuk kedua tema
- * (kelas yang dipasang index.html saat boot dan yang berlaku pukul 08:00-16:00) ditambah
- * `scene-night` untuk tema gelap. Kombinasi tema terang + malam TIDAK diuji: di sana
- * kaca memang sengaja membalik menjadi gelap dan beberapa pasangan lama gagal karena
- * alasan yang tidak termasuk perbaikan ini - mengubahnya berarti mengubah tampilan mode
- * terang, yang justru dilarang oleh perbaikan m025-85.
+ * Lingkup: keempat kombinasi tema x fase kini diuji - terang/siang, gelap/siang,
+ * gelap/malam, dan (sejak m025-113) terang/malam.
+ *
+ * m025-113: kombinasi terang + malam dulu sengaja dikecualikan dengan alasan
+ * "memperbaikinya berarti mengubah tampilan mode terang". Harganya ditagih OWNER pada
+ * 22 Agustus 2026 pukul 22.00: seluruh kartu modul di Home memakai latar terang milik
+ * lapisan v6 sementara tintanya --glass-text yang menjadi TERANG pada .scene-night -
+ * 1,05:1, judulnya benar-benar tidak terbaca, dan tidak satu pun tes memerah. Sejak
+ * m025-113 permukaan dan tinta selalu diambil dari keluarga yang sama (kaca dengan kaca,
+ * tema dengan tema), tanah halaman ikut fase langit di kedua tema, dan aksen yang duduk
+ * di atas kaca punya tokennya sendiri: --accent-on-glass.
  */
 'use strict';
 const assert = require('assert');
@@ -259,7 +264,7 @@ const hex = c => '#' + [c.r, c.g, c.b]
 // diabaikan: keduanya <= 18% dan tidak bisa membalik satu pun pasangan di bawah.
 const SKY = { day: '#ffffff', night: '#0d0710' };
 
-function skyOpacity(theme) {
+function skyOpacity(theme, scene) {
   let value = null;
   for (const r of RULES.tutor) {
     if (norm(r.selector) === 'html.fiezel-ui-v6 .global-sky' && !r.media) {
@@ -273,6 +278,19 @@ function skyOpacity(theme) {
       }
     }
   }
+  // m025-113: tema TERANG pada fase senja/malam. Sebelum rilis ini kombinasi itu tidak
+  // pernah diukur, dan di sanalah tanah halaman berhenti di abu-abu tengah: langit gelap
+  // pada .58 di atas --ui-bg terang. Sekarang langitnya memang menjadi tanahnya, jadi
+  // opasitas itu ikut dibaca dari CSS - bukan diasumsikan.
+  if (theme === 'light' && scene === 'night') {
+    const want = ':root[data-theme="light"] body.scene-night .global-sky';
+    for (const r of RULES.style) {
+      if (r.media) continue;
+      const parts = norm(r.selector).split(',').map(x => x.trim());
+      if (!parts.includes(want)) continue;
+      for (const d of r.decls) if (d.prop === 'opacity') value = Number(d.value);
+    }
+  }
   return value;
 }
 
@@ -280,7 +298,7 @@ function pageBase(theme, scene) {
   const vars = themeVars(theme, scene);
   const base = parseColor(resolveValue('var(--ui-bg)', vars));
   const sky = parseColor(SKY[scene]);
-  sky.a = skyOpacity(theme);
+  sky.a = skyOpacity(theme, scene);
   return over(sky, base);
 }
 
@@ -322,7 +340,7 @@ const MODAL = ref('style', '.modal-panel');
 const PAIRS = [
   { name: 'button — seluruh tombol non-primary', text: 'var(--text)', bg: [ref('style', 'button')] },
   { name: 'button di dalam modal Pengaturan', text: 'var(--text)', bg: [MODAL, ref('style', 'button')] },
-  { name: '.icon-button — tombol Pengaturan di topbar', text: 'var(--text)', bg: [ref('style', '.icon-button')] },
+  { name: '.icon-button — tombol Pengaturan di topbar', text: 'var(--glass-text)', bg: [ref('style', '.icon-button')] },
   { name: '.card', text: 'var(--glass-text)', bg: [CARD] },
   { name: '.card .muted', text: 'var(--glass-muted)', bg: [CARD] },
   { name: '.home-stats>div', text: 'var(--glass-text)', bg: [ref('style', '.home-stats'), ref('style', '.home-stats>div')] },
@@ -330,12 +348,12 @@ const PAIRS = [
   { name: '.report-settings', text: 'var(--text)', bg: [MODAL, ref('style', '.report-settings')] },
   { name: '.report-settings .muted', text: 'var(--muted)', bg: [MODAL, ref('style', '.report-settings')] },
   { name: '.report-preview p', text: 'var(--muted)', bg: [MODAL, ref('style', '.report-preview')] },
-  { name: '.setting-row small', text: 'var(--muted)', bg: [MODAL] },
+  { name: '.setting-row small', text: 'var(--glass-muted)', bg: [MODAL] },
   { name: '.notification-status', text: 'var(--muted)', bg: [MODAL, ref('style', '.notification-status')] },
   { name: '.launch-card', text: 'var(--glass-text)', bg: [ref('tutor', 'html.fiezel-ui-v6 .launch-card')] },
   { name: '.launch-card small', text: 'var(--glass-muted)', bg: [ref('tutor', 'html.fiezel-ui-v6 .launch-card')] },
   { name: '.bottomnav .nav', text: 'var(--glass-muted)', bg: [ref('style', '.bottomnav')] },
-  { name: '.bottomnav .nav.active', text: 'var(--accent)', bg: [ref('style', '.bottomnav')] },
+  { name: '.bottomnav .nav.active', text: 'var(--accent-on-glass)', bg: [ref('style', '.bottomnav')] },
   { name: '.passage', text: 'var(--ink-soft)', bg: [ref('style', '.passage')] },
   { name: '.option — pilihan jawaban kuis', text: 'var(--text)', bg: [ref('style', '.option')] },
   { name: '.level-card', text: 'var(--text)', bg: [ref('style', '.level-card')] },
@@ -344,13 +362,13 @@ const PAIRS = [
   { name: '.topbar .brand-edition', text: 'var(--ambient-muted)', bg: [ref('tutor', 'html.fiezel-ui-v6 .topbar')] },
   { name: '.section-head h1', text: 'var(--ambient-text)', bg: [], large: true },
   { name: '.section-head p', text: 'var(--ambient-muted)', bg: [] },
-  { name: '.section-kicker', text: 'var(--accent-strong)', bg: [] },
+  { name: '.section-kicker', text: 'var(--accent-on-glass)', bg: [] },
   { name: '.status-pill', text: 'var(--accent-strong)', bg: [ref('style', '.hero'), ref('style', '.status-pill')] },
   { name: '.quiz-topbar', text: 'var(--text)', bg: [ref('style', '.quiz-topbar')] },
   { name: '.feedback', text: 'var(--text)', bg: [CARD, ref('style', '.feedback')] },
-  { name: '.mission-panel p', text: 'var(--muted)', bg: [ref('style', '.mission-panel')] },
+  { name: '.mission-panel p', text: 'var(--glass-muted)', bg: [ref('style', '.mission-panel')] },
   { name: '.privacy-strip p', text: 'var(--muted)', bg: [ref('style', '.privacy-strip')] },
-  { name: '.journey-block span', text: 'var(--muted)', bg: [ref('style', '.journey-today')] },
+  { name: '.journey-block span', text: 'var(--glass-muted)', bg: [ref('style', '.journey-today')] },
   { name: '.lesson-example p', text: 'var(--muted)', bg: [ref('style', '.lesson-example')] },
   { name: '.diag-grid>div', text: 'var(--text)', bg: [ref('style', '.diag-grid>div')] },
   { name: '.confidence-box', text: 'var(--text)', bg: [ref('style', '.confidence-box')] },
@@ -376,7 +394,14 @@ const PAIRS = [
 const SCENARIOS = [
   { theme: 'light', scene: 'day' },
   { theme: 'dark', scene: 'day' },
-  { theme: 'dark', scene: 'night' }
+  { theme: 'dark', scene: 'night' },
+  // m025-113: terang + malam TIDAK lagi dikecualikan. Di sanalah OWNER menemukan Home
+  // "berantakan dari atas sampai bawah": kartu modul memakai latar terang milik lapisan
+  // v6 sementara tintanya --glass-text yang menjadi TERANG pada .scene-night - 1,05:1,
+  // judulnya benar-benar tidak terbaca. Alasan pengecualian dulu adalah "memperbaikinya
+  // berarti mengubah mode terang"; itu memang yang dilakukan m025-113, dengan sengaja:
+  // permukaan dan tinta sekarang selalu diambil dari keluarga yang sama.
+  { theme: 'light', scene: 'night' }
 ];
 
 function measure(pair, theme, scene) {

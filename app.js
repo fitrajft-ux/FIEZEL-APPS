@@ -1114,7 +1114,13 @@ function home(){const snapshot=buildLearningSnapshot(),policy=buildAdaptivePolic
     <h1 class="login-message"><span>${esc(learnerName())},</span><br>${esc(homeHeadline(loginMessage.headline))}</h1>
     <p class="launcher-lead">${esc(personalize(loginMessage.lead))}</p>
     <p class="learner-stage"><i data-lucide="graduation-cap"></i> ${esc(LEARNER_STAGE.gradeLabel)} · Semester ${LEARNER_STAGE.semester} · Tahun Ajaran ${esc(LEARNER_STAGE.schoolYear)}</p>
-    <div class="launcher-actions"><button class="primary luxe" onclick="${primaryAction}">${state.adaptiveReady?esc(policy.cta):'Bangun profil kemampuan'} <i data-lucide="arrow-up-right"></i></button><button class="ghost-dark" onclick="askCoachAI()"><i data-lucide="sparkles"></i> Analisis skill dengan AI</button></div>
+    <!-- m025-113 (brief redesign 4): tombol kedua di sini dulu berbunyi "Analisis skill
+         dengan AI" dan memanggil askCoachAI() - fungsi yang SAMA PERSIS dengan tautan
+         "Buka analisis personal" yang berdiri sekitar 300px di bawahnya, di dalam blok
+         Coach yang sama. Dua ajakan aksi untuk satu tujuan di satu layar adalah persis
+         yang membuat layar pertama terbaca ramai. Yang dihapus tombolnya, bukan jalannya:
+         tautan Coach tetap ada dan tetap satu ketukan. -->
+    <div class="launcher-actions"><button class="primary luxe" onclick="${primaryAction}">${state.adaptiveReady?esc(policy.cta):'Bangun profil kemampuan'} <i data-lucide="arrow-up-right"></i></button></div>
   </div>
   <aside class="coach-preview">
     <div class="coach-head"><span class="coach-icon"><i data-lucide="brain-circuit"></i></span><div><small>FIEZEL AI COACH</small><b>${state.adaptiveReady?'Profil aktif':'Mengumpulkan bukti'}</b></div></div>
@@ -1137,7 +1143,12 @@ ${journeyMarkup()}
   <button class="launch-card vocab-launch" onclick="go('vocab')"><span class="launch-icon"><i data-lucide="book-a"></i></span><span><small>${V.length.toLocaleString()} kata</small><b>Vocabulary</b></span><i data-lucide="arrow-up-right"></i></button>
   <button class="launch-card grammar-launch" onclick="go('grammar')"><span class="launch-icon"><i data-lucide="braces"></i></span><span><small>${Object.keys(G).length} skill</small><b>Grammar</b></span><i data-lucide="arrow-up-right"></i></button>
   <button class="launch-card reading-launch" onclick="go('reading')"><span class="launch-icon"><i data-lucide="book-open-text"></i></span><span><small>${R.length} bacaan</small><b>Reading</b></span><i data-lucide="arrow-up-right"></i></button>
-  <button class="launch-card library-launch" onclick="go('library')"><span class="launch-icon"><i data-lucide="library-big"></i></span><span><small>9 buku · audiobook · terjemahan sekali ketuk</small><b>Perpustakaan FIEZEL</b></span><i data-lucide="arrow-up-right"></i></button><button class="launch-card classroom-launch" onclick="go('classroom')"><span class="launch-icon"><i data-lucide="presentation"></i></span><span><small>Pilih materi · suara Inggris + subtitle Indonesia</small><b>FIEZEL Classroom</b></span><i data-lucide="arrow-up-right"></i></button>
+  <!-- m025-113: keterangan dua kartu ini dulu 6 dan 7 kata, sementara empat kartu lain
+       cuma dua. Akibatnya di layar 375px enam kartu punya empat tinggi berbeda dan
+       gridnya terbaca patah. Keterangannya dipendekkan ke bentuk yang sama dengan
+       tetangganya (jumlah + jenis); rincian "terjemahan sekali ketuk" dan "subtitle
+       Indonesia" tetap terbaca di halaman fiturnya masing-masing, satu ketukan dari sini. -->
+  <button class="launch-card library-launch" onclick="go('library')"><span class="launch-icon"><i data-lucide="library-big"></i></span><span><small>9 buku · audiobook</small><b>Perpustakaan</b></span><i data-lucide="arrow-up-right"></i></button><button class="launch-card classroom-launch" onclick="go('classroom')"><span class="launch-icon"><i data-lucide="presentation"></i></span><span><small>Materi · subtitle</small><b>Classroom</b></span><i data-lucide="arrow-up-right"></i></button>
   <button class="launch-card skills-launch" onclick="go('skills')"><span class="launch-icon"><i data-lucide="audio-waveform"></i></span><span><small>72 latihan · A1–C2</small><b>Speaking + Listening</b></span><i data-lucide="arrow-up-right"></i></button>
 </div>
 </section>`)}
