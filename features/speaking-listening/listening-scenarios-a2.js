@@ -34,7 +34,7 @@ module.exports = { level: 'A2', scenarios: [
 ['Cahya','running club at the sports field','Training for a longer race',
  'My name is Cahya. I joined a running club in June and at that time I could only run two kilometers. Now I can finish five without stopping. My coach says I should not increase the distance too quickly, because that is how runners get injured.',
  ['What is Cahya mainly talking about?','How far she can run now compared with June','A running club that she started herself','A race that she lost by five kilometers','A coach who runs beside her every day'],
- ['How far can Cahya run now?','Five kilometers','Two kilometers','Ten kilometers','She does not say'],
+ ['How far can Cahya run now?','Five kilometers without stopping','Two kilometers at most','Ten kilometers on a good day','She does not give a distance'],
  ['Why does the coach warn her?','Adding distance too fast causes injuries','She trains at the wrong time','The club is too big for her','She runs much faster than the others in the club'],
  ['What is the coach main concern?','Keeping Cahya healthy','Winning the next race','Getting more club members','Making training shorter'],
  ["Which sentence means the same as “without stopping”?",'She keeps going all the way','She stops only one time','She runs very slowly','She finishes before the others'],
