@@ -13,7 +13,7 @@
     // R3 memerlukan penyebut untuk cakupan target, dan app.js tidak bisa menunggu bank soal
     // dimuat secara async hanya untuk merender Home. Angka ini dijaga gate: kalau bank
     // berubah dan konstanta ini tidak, gate gagal - jadi tidak bisa diam-diam basi.
-    bankCounts:Object.freeze({listening:1236,speaking:36}),
+    bankCounts:Object.freeze({listening:1407,speaking:36}),
     neuralVoicePreferred:true
   });
 })(typeof globalThis!=='undefined'?globalThis:this);

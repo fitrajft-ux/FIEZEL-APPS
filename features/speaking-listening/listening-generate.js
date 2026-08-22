@@ -1,184 +1,177 @@
 /**
- * m025-108 penyusun soal listening dari bahan sumber.
+ * m025-111 penyusun soal listening berbasis skenario.
  *
- * OWNER meminta 200 soal tambahan per level. Bahannya ditulis tangan di berkas
- * listening-source-*.js; modul ini yang menyusunnya menjadi item bank.
+ * MENGGANTI generator m025-108. Generator lama menyusun soal dari daftar kalimat
+ * lepas; owner memeriksa hasilnya dan menolaknya karena terasa satu template yang
+ * diganti satu-dua kata. Diagnosanya terukur dan tercatat di listening-quality.js:
+ * 45% naskah C2 berbagi empat kata pembuka, seluruh bank hanya memuat lima nama
+ * orang, dan 28% soal bisa dijawab lewat pencocokan kata tanpa mendengar sama sekali.
  *
- * SEMUANYA DETERMINISTIK, dan itu bukan pilihan gaya. speaking-listening-test.js
- * menjalankan rebuild lalu membandingkan hash berkasnya: satu Math.random saja membuat
- * tes itu gagal setiap kali dijalankan. Urutan pengecoh karena itu diputar memakai
- * indeks item, bukan diacak - hasilnya tetap bervariasi antar soal tetapi sama persis
- * di setiap kali rebuild.
+ * BENTUK BARUNYA: satu skenario -> lima soal. Skenario membawa karakter, tempat,
+ * dan situasinya sendiri; kelimanya soal menanyakan naskah yang sama dari lima
+ * sudut resmi TOEFL/IELTS Listening - gist, detail, inference, attitude, paraphrase.
+ * Itu sekaligus alasan naskahnya kini beberapa kalimat: gist dan inference tidak
+ * bisa diuji sungguhan pada satu kalimat tunggal, dan bank lama 99% satu kalimat.
  *
- * DUA ATURAN MUTU YANG DIJAGA DI SINI:
+ * DISTRAKTOR DITULIS TANGAN PER SOAL, tidak diambil dari pool bersama. Pool bersama
+ * itulah yang membuat bank lama memakai ulang satu string pengecoh 19-20 kali per
+ * level - pelajar cukup menghafal 27 label untuk menebak seluruh level.
  *
- *   1. Pengecoh gist diambil dari label adegan LAIN di level yang sama. Pengecoh dari
- *      level berbeda terasa timpang, dan pengecoh karangan bebas mudah menjadi konyol -
- *      dan soal dengan pengecoh konyol bisa dijawab tanpa mendengarkan sama sekali.
- *   2. Jawaban benar tidak boleh selalu di posisi yang sama. Tanpa pemutaran posisi,
- *      pelajar belajar menekan tombol yang sama alih-alih mendengarkan, dan skornya
- *      naik tanpa kemampuannya ikut naik.
+ * TETAP DETERMINISTIK. speaking-listening-test.js menjalankan ulang rebuild lalu
+ * membandingkan hash berkasnya, jadi satu Math.random saja membuat tes itu gagal
+ * setiap kali dijalankan. Pengacakan yang dilihat pelajar terjadi saat sesi dibuka
+ * (DataRepository.for), bukan di sini.
  */
 'use strict';
 
-var MODES = ['gist', 'detail', 'dictation'];
+var quality = require('./listening-quality.js');
 
-/** Memutar array sebanyak n langkah. Dipakai menggantikan pengacakan. */
+var MODES = ['gist', 'detail', 'inference', 'attitude', 'paraphrase'];
+
+/**
+ * Rentang panjang kalimat dictation per level, dalam kata.
+ *
+ * Dictation dipertahankan karena menulis ulang yang didengar melatih pemenggalan kata
+ * dan ejaan - dan itu tidak diuji oleh satu pun dari lima format pilihan ganda. Tetapi
+ * kalimatnya kini diambil dari naskah skenario yang sudah lolos gerbang, bukan ditulis
+ * sebagai daftar kalimat lepas seperti bank lama.
+ */
+var DICTATION_RANGE = {
+  A1: [6, 11], A2: [8, 14], B1: [10, 17], B2: [12, 21], C1: [14, 25], C2: [16, 30]
+};
+
+var FOCUS = {
+  gist: 'main idea',
+  detail: 'specific detail',
+  inference: 'inference',
+  attitude: "speaker's attitude or purpose",
+  paraphrase: 'paraphrase recognition'
+};
+
+/**
+ * Memutar array sebanyak n langkah.
+ *
+ * Dipakai menggantikan pengacakan supaya posisi jawaban benar berpindah-pindah tanpa
+ * merusak determinisme. Tanpa ini pelajar belajar menekan tombol yang sama alih-alih
+ * mendengarkan, dan skornya naik tanpa kemampuannya ikut naik.
+ */
 function rotate(list, n) {
   var out = list.slice();
   var shift = ((n % out.length) + out.length) % out.length;
   return out.slice(shift).concat(out.slice(0, shift));
 }
 
-function id(level, mode, index) {
-  return 'listen_gen_' + level.toLowerCase() + '_' + mode + '_' + String(index + 1).padStart(3, '0');
+function itemId(level, mode, index) {
+  return 'listen_sc_' + level.toLowerCase() + '_' + mode + '_' + String(index + 1).padStart(3, '0');
 }
 
 /**
- * Soal gist: menanyakan pokok pembicaraan.
- *
- * Pengecohnya label adegan lain, dipilih berjarak di dalam daftar supaya tiga pengecoh
- * satu soal tidak berasal dari adegan yang bersebelahan - adegan bersebelahan cenderung
- * bertema mirip, dan tiga pengecoh yang mirip satu sama lain mempersempit pilihan.
+ * Satu skenario ditulis sebagai array supaya berkas sumbernya tetap terbaca sebagai
+ * naskah, bukan sebagai konfigurasi. Urutannya tetap:
+ *   [nama, tempat, topik, naskah, gist, detail, inference, attitude, paraphrase]
+ * dan tiap soal: [pertanyaan, jawaban benar, pengecoh1, pengecoh2, pengecoh3].
  */
-function buildGist(level, source) {
-  var topics = source.scenes.map(function (s) { return s.topic; });
+function readScenario(row) {
+  return {
+    character: row[0],
+    setting: row[1],
+    topic: row[2],
+    script: row[3],
+    questions: MODES.map(function (mode, i) {
+      var q = row[4 + i];
+      return { mode: mode, question: q[0], answer: q[1], distractors: q.slice(2) };
+    })
+  };
+}
+
+/**
+ * Memilih satu kalimat dari naskah untuk soal dictation.
+ *
+ * Kalimat pertama hampir selalu perkenalan diri ("My name is ...") dan terlalu mudah,
+ * jadi yang dipilih adalah kalimat yang panjangnya paling dekat ke tengah rentang level
+ * DI LUAR kalimat pembuka. Skenario yang tidak punya kalimat sepadan dilewati, bukan
+ * dipaksakan - satu soal dictation yang kepanjangan hanya mengukur daya ingat.
+ */
+function pickDictationSentence(level, script) {
+  var band = DICTATION_RANGE[level];
+  if (!band) return '';
+  var target = (band[0] + band[1]) / 2;
+  var sentences = String(script).split(/(?<=[.!?])\s+/).slice(1);
+  var best = '', bestGap = Infinity;
+  sentences.forEach(function (raw) {
+    var sentence = raw.trim();
+    var n = sentence.split(/\s+/).length;
+    if (n < band[0] || n > band[1]) return;
+    var gap = Math.abs(n - target);
+    if (gap < bestGap) { bestGap = gap; best = sentence; }
+  });
+  return best;
+}
+
+function buildLevel(level, source) {
+  if (!source || !source.scenarios) return [];
   var items = [];
-  var n = 0;
-  source.scenes.forEach(function (scene, sceneIndex) {
-    scene.scripts.forEach(function (script) {
-      var others = [];
-      for (var step = 1; others.length < 3; step++) {
-        var pick = topics[(sceneIndex + step * 5 + n) % topics.length];
-        if (pick !== scene.topic && others.indexOf(pick) === -1) others.push(pick);
-      }
-      var options = rotate([scene.topic].concat(others), n % 4);
+  var counter = {};
+  MODES.forEach(function (m) { counter[m] = 0; });
+
+  var dictationIndex = 0;
+
+  source.scenarios.forEach(function (row, sceneIndex) {
+    var scene = readScenario(row);
+    var sentence = pickDictationSentence(level, scene.script);
+    if (sentence) {
       items.push({
-        id: id(level, 'gist', n),
+        id: itemId(level, 'dictation', dictationIndex++),
         schema: 'fiezel-listening-item-v1',
         level: level,
-        mode: 'gist',
-        script: script,
+        mode: 'dictation',
+        script: sentence,
         voiceLang: 'en-US',
         maxReplays: 2,
         pedagogy: {
-          focus: 'main idea',
-          evidence: 'The speaker is talking about ' + scene.topic.toLowerCase() + '.'
+          focus: 'accurate decoding and word segmentation',
+          scenario: scene.topic + ' — ' + scene.setting,
+          character: scene.character
         },
         privacy: { rawLearnerResponseRequiredForPersistence: false },
-        question: 'What is the speaker mainly talking about?',
+        question: 'Ketik kalimat yang kamu dengar. Teks jawaban tidak disimpan setelah penilaian.',
+        answerText: sentence,
+        scoring: { metric: 'token_f1' }
+      });
+    }
+    scene.questions.forEach(function (q, qIndex) {
+      // Posisi jawaban diputar memakai dua indeks sekaligus. Memakai indeks soal saja
+      // membuat gist selalu di posisi 0, detail selalu di posisi 1, dan seterusnya.
+      var options = rotate([q.answer].concat(q.distractors), (sceneIndex + qIndex * 3) % 4);
+      items.push({
+        id: itemId(level, q.mode, counter[q.mode]++),
+        schema: 'fiezel-listening-item-v1',
+        level: level,
+        mode: q.mode,
+        script: scene.script,
+        voiceLang: 'en-US',
+        maxReplays: 2,
+        pedagogy: {
+          focus: FOCUS[q.mode],
+          scenario: scene.topic + ' — ' + scene.setting,
+          character: scene.character
+        },
+        privacy: { rawLearnerResponseRequiredForPersistence: false },
+        question: q.question,
         options: options,
-        answerIndex: options.indexOf(scene.topic),
+        answerIndex: options.indexOf(q.answer),
         scoring: { metric: 'exact_choice' }
       });
-      n++;
     });
   });
   return items;
 }
 
-/** Soal detail: menanyakan fakta yang benar-benar diucapkan. */
-function buildDetail(level, source) {
-  return source.facts.map(function (fact, n) {
-    var options = rotate([fact.answer].concat(fact.wrong), n % 4);
-    return {
-      id: id(level, 'detail', n),
-      schema: 'fiezel-listening-item-v1',
-      level: level,
-      mode: 'detail',
-      script: fact.script,
-      voiceLang: 'en-US',
-      maxReplays: 2,
-      pedagogy: {
-        focus: 'specific detail',
-        evidence: 'The answer is stated directly in the sentence.'
-      },
-      privacy: { rawLearnerResponseRequiredForPersistence: false },
-      question: fact.question,
-      options: options,
-      answerIndex: options.indexOf(fact.answer),
-      scoring: { metric: 'exact_choice' }
-    };
-  });
-}
-
-/** Soal dictation: menulis ulang kalimat yang didengar. */
-function buildDictation(level, source) {
-  return source.dictation.map(function (sentence, n) {
-    return {
-      id: id(level, 'dictation', n),
-      schema: 'fiezel-listening-item-v1',
-      level: level,
-      mode: 'dictation',
-      script: sentence,
-      voiceLang: 'en-US',
-      maxReplays: 2,
-      pedagogy: {
-        focus: 'accurate decoding and word segmentation',
-        evidence: 'The sentence uses vocabulary and structure calibrated for ' + level + '.'
-      },
-      privacy: { rawLearnerResponseRequiredForPersistence: false },
-      question: 'Ketik kalimat yang kamu dengar. Teks jawaban tidak disimpan setelah penilaian.',
-      answerText: sentence,
-      scoring: { metric: 'token_f1' }
-    };
-  });
-}
-
-/**
- * @param {string} level  A1..C2
- * @param {object} source { scenes, facts, dictation }
- * @returns {Array} item bank untuk satu level
- */
-function buildLevel(level, source) {
-  if (!source) return [];
-  return [].concat(
-    buildGist(level, source),
-    buildDetail(level, source),
-    buildDictation(level, source)
-  );
-}
-
-/**
- * Memeriksa mutu sebelum item masuk bank.
- *
- * Dijalankan generator, bukan hanya tes, supaya kesalahan bahan terlihat saat menulisnya
- * dan bukan berminggu-minggu kemudian di CI. Melempar, bukan memperingatkan: soal cacat
- * yang lolos ke bank akan dikerjakan pelajar sungguhan.
- */
-function assertSound(items) {
-  var seenId = {};
-  var seenScript = {};
-  items.forEach(function (item) {
-    if (seenId[item.id]) throw new Error('id ganda: ' + item.id);
-    seenId[item.id] = true;
-
-    // Naskah yang sama muncul dua kali membuat pelajar merasa banknya diulang-ulang.
-    var key = item.level + '|' + item.script.toLowerCase();
-    if (seenScript[key]) throw new Error('naskah ganda di ' + item.level + ': ' + item.script);
-    seenScript[key] = true;
-
-    if (MODES.indexOf(item.mode) === -1) throw new Error('mode tidak dikenal: ' + item.mode);
-
-    if (item.mode === 'dictation') {
-      if (item.answerText !== item.script) throw new Error('dictation tidak sepadan: ' + item.id);
-      if (item.scoring.metric !== 'token_f1') throw new Error('metrik dictation salah: ' + item.id);
-      return;
-    }
-    if (!Array.isArray(item.options) || item.options.length !== 4) {
-      throw new Error('pilihan bukan empat: ' + item.id);
-    }
-    if (new Set(item.options).size !== 4) throw new Error('pilihan tidak unik: ' + item.id);
-    if (!(item.answerIndex >= 0 && item.answerIndex < 4)) {
-      throw new Error('indeks jawaban di luar rentang: ' + item.id);
-    }
-  });
-  return true;
-}
-
 module.exports = {
   MODES: MODES,
+  DICTATION_RANGE: DICTATION_RANGE,
+  pickDictationSentence: pickDictationSentence,
   rotate: rotate,
   buildLevel: buildLevel,
-  assertSound: assertSound
+  assertSound: quality.assertSound
 };

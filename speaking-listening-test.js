@@ -18,23 +18,33 @@ const levels=['A1','A2','B1','B2','C1','C2'];
 const voices=['af_bella','af_heart'];
 
 test('runtime schema',()=>assert.equal(runtime.schema,'fiezel-speaking-listening-addon-v1'));
-// m025-108: bank diperluas atas permintaan OWNER. Jumlahnya tidak lagi dipatok angka
-// tetap - yang dijaga adalah 36 soal benih tetap utuh dan tiap level yang diperluas
-// benar-benar bertambah 200. Mematok totalnya membuat setiap penambahan level berikutnya
-// gagal tanpa alasan yang berarti.
+// m025-111: seluruh bank kini berasal dari skenario. Yang dijaga bukan angka total,
+// melainkan bahwa tiap level punya 40 skenario dan lima format resmi TOEFL/IELTS -
+// mematok totalnya membuat setiap penambahan skenario berikutnya gagal tanpa alasan.
 test('listening bank identity',()=>assert.deepStrictEqual([listening.schema,listening.version,listening.status],['fiezel-listening-bank-v1',2,'reviewed_release_seed']));
 test('listening count matches items',()=>assert.equal(listening.count,listening.items.length));
-test('36 soal benih tetap utuh',()=>assert.equal(listening.items.filter(i=>!i.id.startsWith('listen_gen_')).length,36));
-test('setiap level mendapat tepat 200 soal baru',()=>{for(const level of levels)assert.equal(listening.items.filter(i=>i.level===level&&i.id.startsWith('listen_gen_')).length,200,level+' tidak mendapat 200 soal')});
-// Naskah ganda membuat pelajar merasa banknya diulang-ulang, dan itu tidak terlihat
-// dari jumlah item mana pun.
-test('tidak ada naskah ganda dalam satu level',()=>{const seen=new Set();for(const i of listening.items){const key=i.level+'|'+i.script.toLowerCase();assert.ok(!seen.has(key),'naskah ganda di '+i.level+': '+i.script);seen.add(key)}});
+test('tidak ada sisa bank lama',()=>assert.ok(listening.items.every(i=>i.id.startsWith('listen_sc_')),'masih ada item bank lama'));
+test('setiap level punya 40 skenario',()=>{for(const level of levels){const scenarios=new Set(listening.items.filter(i=>i.level===level).map(i=>i.pedagogy.scenario));assert.equal(scenarios.size,40,level+' punya '+scenarios.size+' skenario')}});
+test('setiap level punya 40 soal untuk tiap format resmi',()=>{for(const level of levels)for(const mode of ['gist','detail','inference','attitude','paraphrase'])assert.equal(listening.items.filter(i=>i.level===level&&i.mode===mode).length,40,level+'/'+mode)});
+// Nama dan tempat yang dipakai ulang adalah cara paling cepat membuat bank terasa
+// seperti satu template - bank lama hanya memuat lima nama orang untuk 1236 soal.
+test('karakter dan setting tidak dipakai dua skenario',()=>{const who=new Set(),where=new Set();for(const i of listening.items){const c=i.pedagogy.character;assert.ok(c,'skenario tanpa karakter: '+i.id);if(!who.has(c+'|'+i.pedagogy.scenario)){assert.ok(![...who].some(k=>k.split('|')[0]===c),'karakter dipakai dua skenario: '+c);who.add(c+'|'+i.pedagogy.scenario)}where.add(i.pedagogy.scenario)}assert.equal(where.size,240)});
+// Gerbang mutu dijalankan generator sebelum berkas ditulis. Tes ini memastikan gerbang
+// itu benar-benar hidup: bank yang tersimpan harus lolos pemeriksaan yang sama.
+test('bank tersimpan lolos gerbang mutu',()=>{const quality=require(path.join(feature,'listening-quality.js'));assert.equal(quality.assertSound(listening.items),true)});
+// Satu skenario memang dipakai lima soal; yang membuat bank terasa diulang-ulang adalah
+// naskah yang sama muncul di DUA skenario berbeda, dan itu tidak terlihat dari jumlah
+// item mana pun.
+test('tidak ada naskah dipakai dua skenario',()=>{const seen=new Map();for(const i of listening.items){if(i.mode==='dictation')continue;const key=i.level+'|'+i.script.toLowerCase();const scen=i.pedagogy.scenario;if(seen.has(key))assert.equal(seen.get(key),scen,'naskah dipakai dua skenario di '+i.level+': '+i.script.slice(0,60));else seen.set(key,scen)}});
 // Jawaban benar yang menumpuk di satu posisi bisa ditebak tanpa mendengarkan sama sekali.
 test('posisi jawaban benar tersebar',()=>{const mcq=listening.items.filter(i=>i.mode!=='dictation'),pos=[0,0,0,0];mcq.forEach(i=>pos[i.answerIndex]++);const min=Math.min(...pos),max=Math.max(...pos);assert.ok(min>=max*0.7,'sebaran posisi jawaban timpang: '+pos.join('/'))});
 test('speaking bank reviewed v2 seed',()=>assert.deepStrictEqual([speaking.schema,speaking.version,speaking.status,speaking.count],['fiezel-speaking-bank-v1',2,'reviewed_release_seed',36]));
 test('all IDs unique',()=>assert.equal(new Set([...listening.items,...speaking.items].map(item=>item.id)).size,listening.items.length+speaking.items.length));
-test('six seed items per level per domain',()=>{for(const level of levels){assert.equal(listening.items.filter(item=>item.level===level&&!item.id.startsWith('listen_gen_')).length,6);assert.equal(speaking.items.filter(item=>item.level===level).length,6)}});
-test('two seed items per listening mode and level',()=>{for(const level of levels)for(const mode of ['gist','detail','dictation'])assert.equal(listening.items.filter(item=>item.level===level&&item.mode===mode&&!item.id.startsWith('listen_gen_')).length,2)});
+test('six seed items per level per domain',()=>{for(const level of levels)assert.equal(speaking.items.filter(item=>item.level===level).length,6)});
+// Dictation tidak termasuk lima format resmi, tetapi menulis ulang yang didengar melatih
+// pemenggalan kata dan ejaan - dan itu tidak diuji satu pun format pilihan ganda. Kalimatnya
+// diambil dari naskah skenario yang sudah lolos gerbang, bukan ditulis sebagai daftar lepas.
+test('dictation ada di tiap level dan berasal dari naskah skenario',()=>{const scripts=new Set(listening.items.filter(i=>i.mode!=='dictation').map(i=>i.script));for(const level of levels){const rows=listening.items.filter(i=>i.level===level&&i.mode==='dictation');assert.ok(rows.length>=30,level+' hanya punya '+rows.length+' dictation');assert.ok(rows.every(i=>[...scripts].some(s=>s.includes(i.script))),level+' punya dictation di luar naskah skenario')}});
 test('two items per speaking mode and level',()=>{for(const level of levels)for(const mode of ['repeat_target','guided_response','roleplay'])assert.equal(speaking.items.filter(item=>item.level===level&&item.mode===mode).length,2)});
 test('listening voices use locked pool',()=>assert.ok(listening.items.every(item=>voices.includes(item.voice)&&item.audioProfile==='listening')));
 test('listening MCQ answer integrity',()=>assert.ok(listening.items.filter(item=>item.mode!=='dictation').every(item=>item.options.length===4&&new Set(item.options).size===4&&Number.isInteger(item.answerIndex)&&item.answerIndex>=0&&item.answerIndex<4)));

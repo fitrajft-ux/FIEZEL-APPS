@@ -16,7 +16,7 @@ self.FIEZEL_REQUIRE_NOTIFICATIONS=false;
 // m025-61: penanda build halaman, dipakai health check untuk membandingkan versi yang
 // benar-benar dimuat dengan shell yang dipegang service worker. Nilainya dijaga gate agar
 // selalu sama dengan DIAG_BUILD; kalau keduanya berbeda, install-health-test gagal.
-self.FIEZEL_PAGE_BUILD='m025-112';
+self.FIEZEL_PAGE_BUILD='m025-113';
 self.FIEZEL_CORE_CONFIG=Object.freeze({
   workerUrl:'https://fiezel-core.puter.work',
   protocolVersion:'1.7',
