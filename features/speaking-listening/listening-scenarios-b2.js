@@ -342,7 +342,7 @@ module.exports = { level: 'B2', scenarios: [
 ['Lucia','museum gallery with an old label','A caption that was quietly wrong',
  'My name is Lucia. A label on one of our paintings gave a date that research had corrected eleven years ago, and the correction never reached the wall. Nobody had done anything wrong; the researcher published, the curator moved departments, and no process connected the two. We now review labels whenever a related publication appears, which is dull work and prevents exactly this.',
  ['What is Lucia mainly talking about?','A correction that never travelled from research to the gallery wall','A researcher who published a date that was completely wrong','A painting that her own museum sold eleven years ago','A curator who deliberately ignored a published correction'],
- ['How long had the label been wrong?','Eleven years','One year','Several months','Since the museum opened'],
+ ['How long had the label been wrong?','For eleven years','For a single year','For several months only','Since the museum first opened'],
  ['What was the cause of the error?','No process linked publication to the labels','A curator refused to change the label','The published research itself was mistaken','Visitors had damaged the original label'],
  ['What is the museum new practice?','Reviewing labels when related research appears','Removing every label from the gallery','Asking visitors to report any errors they see','Publishing its own research instead'],
  ["Which sentence means the same as “Nobody had done anything wrong”?",'No individual was at fault for the error','Everybody involved had acted carelessly','The curator was responsible for the mistake','The researcher should have been dismissed'],

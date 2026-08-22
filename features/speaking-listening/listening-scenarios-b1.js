@@ -314,7 +314,7 @@ module.exports = { level: 'B1', scenarios: [
 ['Hasna','family table with a wedding list','A disagreement about the budget',
  'I am Hasna. My parents want four hundred guests at my wedding and I want sixty. For them the guest list is about respect for relatives, and for me it is about money we could use for a house. We have agreed on a large simple event rather than a small expensive one, and nobody got exactly what they wanted.',
  ['What is Hasna mainly talking about?','A wedding guest list her parents and she finally agreed on','A wedding that her relatives paid for out of respect','A house that her relatives bought for her after the wedding','Four hundred relatives who refused to attend her wedding'],
- ['How many guests do her parents want?','Four hundred','Sixty','Fewer than fifty','They have not decided'],
+ ['How many guests do her parents want?','Four hundred guests','Sixty guests at most','Fewer than fifty relatives','They have not decided a number'],
  ['Why does the guest list matter to her parents?','It is a question of respect for relatives','They want to show their wealth','They have already paid for the guests','They dislike small family gatherings'],
  ['How does Hasna describe the agreement?','Neither side won completely','She got everything she wanted','Her parents got everything','The argument is still going on'],
  ["Which sentence means the same as “money we could use for a house”?",'The same funds have another possible purpose','Her parents will buy the house for her','The wedding will pay for a house','She has already bought a house'],

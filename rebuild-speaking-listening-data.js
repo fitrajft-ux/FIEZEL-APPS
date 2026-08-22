@@ -40,25 +40,29 @@ const sampleRepairs={
   speak_0010:'This weekend, I am going to practice coding and meet my friends.',
   speak_0021:'Studying alone helps me focus, while studying with friends is useful for discussion. I prefer studying alone because I concentrate better on difficult topics.'
 };
-// m025-108: bank listening diperluas atas permintaan OWNER - 200 soal per level.
+// m025-111: seluruh bank listening disusun ulang dari skenario.
 //
-// Item hasil susunan diberi awalan listen_gen_ dan DIBUANG lebih dulu setiap rebuild,
-// lalu disusun ulang dari bahan sumbernya. Tanpa pembuangan itu, menjalankan rebuild dua
-// kali akan menggandakan banknya - dan tes idempotensi akan menangkapnya, tetapi hanya
-// setelah berkasnya terlanjur rusak.
+// OWNER memeriksa bank m025-108 dan menolaknya: soalnya terasa satu template yang
+// diganti satu-dua kata. Diagnosanya terukur - 45% naskah C2 berbagi empat kata
+// pembuka, seluruh 1236 soal hanya memuat lima nama orang, dan 28% soal bisa dijawab
+// lewat pencocokan kata tanpa mendengar sama sekali.
+//
+// Bank lama TIDAK dipertahankan sebagian. Item bawaannya pun berbentuk kalimat tunggal
+// tanpa pemilik, dan satu di antaranya persis pola yang owner sebut terlarang. Yang
+// ditulis di sini seluruhnya berasal dari listening-scenarios-*.js.
+//
+// listening-quality.js dijalankan SEBELUM berkasnya ditulis. Bank yang cacat karena itu
+// tidak pernah sampai tersimpan, bukan ditemukan berminggu-minggu kemudian di CI.
 //
 // Susunannya sepenuhnya deterministik: tidak ada pengacakan, sehingga rebuild kedua
-// menghasilkan berkas yang sama persis.
+// menghasilkan berkas yang sama persis. Pengacakan yang dilihat pelajar terjadi saat
+// sesi dibuka (DataRepository.for), bukan di sini.
 const listeningGenerate=require(path.join(feature,'listening-generate.js'));
-const listeningSources=Object.assign({},
-  require(path.join(feature,'listening-source-a1-a2.js')),
-  require(path.join(feature,'listening-source-b1-b2.js')),
-  require(path.join(feature,'listening-source-c1-c2.js')));
-const seedItems=listening.items.filter(item=>!String(item.id||'').startsWith('listen_gen_'));
-const generatedItems=Object.keys(listeningSources).sort().reduce(
-  (acc,level)=>acc.concat(listeningGenerate.buildLevel(level,listeningSources[level])),[]);
-listeningGenerate.assertSound(seedItems.concat(generatedItems));
-listening.items=seedItems.concat(generatedItems);
+const levels=['A1','A2','B1','B2','C1','C2'];
+const listeningItems=levels.reduce((acc,level)=>acc.concat(
+  listeningGenerate.buildLevel(level,require(path.join(feature,`listening-scenarios-${level.toLowerCase()}.js`)))),[]);
+listeningGenerate.assertSound(listeningItems);
+listening.items=listeningItems;
 listening.version=2;
 listening.status='reviewed_release_seed';
 listening.items=listening.items.map((item,index)=>({...item,voice:voices[index%voices.length],audioProfile:'listening'}));
@@ -74,4 +78,5 @@ listening.count=listening.items.length;
 speaking.count=speaking.items.length;
 fs.writeFileSync(listeningPath,JSON.stringify(listening,null,2)+'\n');
 fs.writeFileSync(speakingPath,JSON.stringify(speaking,null,2)+'\n');
-console.log(JSON.stringify({listening:listening.count,listeningSeed:seedItems.length,listeningGenerated:generatedItems.length,speaking:speaking.count,voices,conceptItems:Object.keys(concepts).length,status:'rebuilt'}));
+const scenarioCount=levels.reduce((n,level)=>n+require(path.join(feature,`listening-scenarios-${level.toLowerCase()}.js`)).scenarios.length,0);
+console.log(JSON.stringify({listening:listening.count,listeningScenarios:scenarioCount,speaking:speaking.count,voices,conceptItems:Object.keys(concepts).length,status:'rebuilt'}));

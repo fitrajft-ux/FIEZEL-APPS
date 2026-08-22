@@ -86,6 +86,17 @@ var MODES = ['gist', 'detail', 'inference', 'attitude', 'paraphrase'];
 
 function fail(msg) { throw new Error('mutu listening: ' + msg); }
 
+/** Rentang panjang kalimat dictation per level; dicerminkan di listening-generate.js. */
+var DICTATION_RANGE = {
+  A1: [6, 11], A2: [8, 14], B1: [10, 17], B2: [12, 21], C1: [14, 25], C2: [16, 30]
+};
+
+function checkBritish(item) {
+  var british = String(item.script).toLowerCase().replace(/[^a-z ]/g, ' ').split(/\s+/)
+    .filter(function (w) { return BRITISH.has(w); });
+  if (british.length) fail('ejaan British ("' + british[0] + '") sementara voice en-US: ' + item.id);
+}
+
 /**
  * @param {Array} items  seluruh bank, termasuk item lama, supaya soal baru
  *                       benar-benar diadu dengan yang sudah ada (aturan 5 owner).
@@ -113,15 +124,19 @@ function assertSound(items) {
       // Satu skenario memang dipakai lima soal; yang dilarang adalah naskah yang
       // sama muncul di skenario yang berbeda.
       var scen = (item.pedagogy && item.pedagogy.scenario) || item.id;
+      if (item.mode === 'dictation') scen = 'dictation:' + scen;
       if (seenScript[key] && seenScript[key] !== scen) {
         fail('naskah dipakai dua skenario di ' + level + ': ' + item.script.slice(0, 60));
       }
       seenScript[key] = scen;
     });
 
+    // Naskah dictation adalah kutipan dari naskah skenarionya sendiri, jadi ia memang
+    // mirip dengan induknya dan tidak boleh diadu di sini. Yang diadu naskah skenario.
     var uniq = [];
     var done = Object.create(null);
     byLevel[level].forEach(function (item) {
+      if (item.mode === 'dictation') return;
       var k = item.script.toLowerCase().trim();
       if (done[k]) return;
       done[k] = true;
@@ -209,6 +224,19 @@ function assertSound(items) {
         if (seen[k]) return;
         seen[k] = true;
         var w = String(item.script).trim().split(/\s+/);
+        // Dictation adalah satu kalimat menurut definisinya, jadi pita wacana di atas
+        // tidak berlaku - yang berlaku rentang panjang kalimatnya sendiri.
+        if (item.mode === 'dictation') {
+          var dband = DICTATION_RANGE[level];
+          if (dband && (w.length < dband[0] || w.length > dband[1])) {
+            fail('kalimat dictation ' + w.length + ' kata di luar rentang ' + level + ': ' + item.id);
+          }
+          if ((item.script.match(/[.!?]/g) || []).length !== 1) {
+            fail('dictation bukan satu kalimat utuh: ' + item.id);
+          }
+          checkBritish(item);
+          return;
+        }
         if (w.length < band.minWords || w.length > band.maxWords) {
           fail('panjang naskah ' + w.length + ' kata di luar rentang ' + level + ' (' + band.minWords + '-' + band.maxWords + '): ' + item.id);
         }
@@ -220,9 +248,7 @@ function assertSound(items) {
         if (sentences < band.minSentences) {
           fail('naskah hanya ' + sentences + ' kalimat di ' + level + ' (min ' + band.minSentences + '): ' + item.id);
         }
-        var british = item.script.toLowerCase().replace(/[^a-z ]/g, ' ').split(/\s+/)
-          .filter(function (w) { return BRITISH.has(w); });
-        if (british.length) fail('ejaan British ("' + british[0] + '") sementara voice en-US: ' + item.id);
+        checkBritish(item);
       });
     }
 
@@ -254,6 +280,7 @@ function assertSound(items) {
 
 module.exports = {
   assertSound: assertSound,
+  DICTATION_RANGE: DICTATION_RANGE,
   content: content,
   stems: stems,
   trigrams: trigrams,

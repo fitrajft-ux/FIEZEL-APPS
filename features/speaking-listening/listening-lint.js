@@ -62,6 +62,7 @@ function main() {
     rows.forEach(function (r) { console.log('   ' + r[0] + '  ' + r[1] + '  -> ' + r[2]); bad++; });
     var w = {}, seen = {};
     items.forEach(function (i) {
+      if (i.mode === 'dictation') return;
       if (seen[i.script]) return; seen[i.script] = true;
       var n = i.script.trim().split(/\s+/).length;
       var band = quality.CEFR[level];

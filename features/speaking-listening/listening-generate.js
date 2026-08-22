@@ -28,6 +28,18 @@ var quality = require('./listening-quality.js');
 
 var MODES = ['gist', 'detail', 'inference', 'attitude', 'paraphrase'];
 
+/**
+ * Rentang panjang kalimat dictation per level, dalam kata.
+ *
+ * Dictation dipertahankan karena menulis ulang yang didengar melatih pemenggalan kata
+ * dan ejaan - dan itu tidak diuji oleh satu pun dari lima format pilihan ganda. Tetapi
+ * kalimatnya kini diambil dari naskah skenario yang sudah lolos gerbang, bukan ditulis
+ * sebagai daftar kalimat lepas seperti bank lama.
+ */
+var DICTATION_RANGE = {
+  A1: [6, 11], A2: [8, 14], B1: [10, 17], B2: [12, 21], C1: [14, 25], C2: [16, 30]
+};
+
 var FOCUS = {
   gist: 'main idea',
   detail: 'specific detail',
@@ -72,14 +84,61 @@ function readScenario(row) {
   };
 }
 
+/**
+ * Memilih satu kalimat dari naskah untuk soal dictation.
+ *
+ * Kalimat pertama hampir selalu perkenalan diri ("My name is ...") dan terlalu mudah,
+ * jadi yang dipilih adalah kalimat yang panjangnya paling dekat ke tengah rentang level
+ * DI LUAR kalimat pembuka. Skenario yang tidak punya kalimat sepadan dilewati, bukan
+ * dipaksakan - satu soal dictation yang kepanjangan hanya mengukur daya ingat.
+ */
+function pickDictationSentence(level, script) {
+  var band = DICTATION_RANGE[level];
+  if (!band) return '';
+  var target = (band[0] + band[1]) / 2;
+  var sentences = String(script).split(/(?<=[.!?])\s+/).slice(1);
+  var best = '', bestGap = Infinity;
+  sentences.forEach(function (raw) {
+    var sentence = raw.trim();
+    var n = sentence.split(/\s+/).length;
+    if (n < band[0] || n > band[1]) return;
+    var gap = Math.abs(n - target);
+    if (gap < bestGap) { bestGap = gap; best = sentence; }
+  });
+  return best;
+}
+
 function buildLevel(level, source) {
   if (!source || !source.scenarios) return [];
   var items = [];
   var counter = {};
   MODES.forEach(function (m) { counter[m] = 0; });
 
+  var dictationIndex = 0;
+
   source.scenarios.forEach(function (row, sceneIndex) {
     var scene = readScenario(row);
+    var sentence = pickDictationSentence(level, scene.script);
+    if (sentence) {
+      items.push({
+        id: itemId(level, 'dictation', dictationIndex++),
+        schema: 'fiezel-listening-item-v1',
+        level: level,
+        mode: 'dictation',
+        script: sentence,
+        voiceLang: 'en-US',
+        maxReplays: 2,
+        pedagogy: {
+          focus: 'accurate decoding and word segmentation',
+          scenario: scene.topic + ' — ' + scene.setting,
+          character: scene.character
+        },
+        privacy: { rawLearnerResponseRequiredForPersistence: false },
+        question: 'Ketik kalimat yang kamu dengar. Teks jawaban tidak disimpan setelah penilaian.',
+        answerText: sentence,
+        scoring: { metric: 'token_f1' }
+      });
+    }
     scene.questions.forEach(function (q, qIndex) {
       // Posisi jawaban diputar memakai dua indeks sekaligus. Memakai indeks soal saja
       // membuat gist selalu di posisi 0, detail selalu di posisi 1, dan seterusnya.
@@ -110,6 +169,8 @@ function buildLevel(level, source) {
 
 module.exports = {
   MODES: MODES,
+  DICTATION_RANGE: DICTATION_RANGE,
+  pickDictationSentence: pickDictationSentence,
   rotate: rotate,
   buildLevel: buildLevel,
   assertSound: quality.assertSound
