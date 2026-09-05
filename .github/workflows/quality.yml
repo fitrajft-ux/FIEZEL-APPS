@@ -475,6 +475,7 @@ jobs:
           node tests/speaking-listening-test.js
           node tools/dev/check-listening-similarity.js
           node tests/search-feedback-test.js
+          node tests/view-reachability-test.js
           node tests/diag-panel-test.js
           node tests/diag-search-test.js
           node tests/sw-corp-test.js

@@ -6153,7 +6153,13 @@ Pertanyaan murid: "${String(question||'').slice(0,600)}"`;
 }
 function syncCoachBubble(){
   try{
-    const api=self.FiezelCoachBubble?.install?.({ask:(question,ctx)=>askFiezelAI(coachAskPrompt(question,ctx),'coach_question',{question,level:getActiveLevel(),lessonId:String(ctx?.lessonId||ctx?.view||''),focusLabel:String(ctx?.focusLabel||ctx?.title||'')})});
+    /* m025-266: openAsk adalah SATU-SATUNYA pintu ke layar Tanya FIEZEL (askView) sejak
+       m025-254 mengganti tombol topbar-nya dengan lonceng. Komentar index.html menjanjikan
+       "aksesnya lewat pembimbing PAW", tapi tidak ada kode yang menepatinya - layar itu
+       yatim sebelas build. Nama view ditulis DI SINI, bukan di modul gelembung, supaya
+       tests/view-reachability-test.js menemukannya sebagai go('ask') dan modul gelembung
+       tetap tidak tahu nama rute apa pun. */
+    const api=self.FiezelCoachBubble?.install?.({ask:(question,ctx)=>askFiezelAI(coachAskPrompt(question,ctx),'coach_question',{question,level:getActiveLevel(),lessonId:String(ctx?.lessonId||ctx?.view||''),focusLabel:String(ctx?.focusLabel||ctx?.title||'')}),openAsk:()=>go('ask')});
     api?.update?.(coachBubbleContext());
   }catch(_){}
 }

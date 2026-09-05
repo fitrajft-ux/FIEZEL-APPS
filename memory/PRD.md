@@ -33,3 +33,10 @@ Problem statement: rebuild "Class" di bottom nav sebagai learning hub guru–mur
 - app.js: view `classroom` → `classHubView()`; tutor bersuara tetap hidup lewat kartu "Tutor FIEZEL"; notifikasi tugas → Kelas; learner-flow merutekan blok tugas guru ke hub.
 - Gate baru `tests/class-hub-test.js` (unit + smoke DOM-stub loop penuh) masuk quality.yml.
 Backlog: satukan `route-teacher.js` (pohon konten server) sebagai sumber impor; kalibrasi review dengan bukti; ledger miskonsepsi murid dari `w[]`; i18n TH hub.
+
+## m025-266 — Pintu Tanya FIEZEL + gerbang layar yatim (Sep 2026, branch fix/pintu-tanya-fiezel)
+- Akar masalah: m025-254 mengganti tombol topbar "Tanya FIEZEL" dengan lonceng; `askView()` (view `ask`/`search`) yatim 11 build tanpa satu pun `go('ask')`.
+- Perbaikan: chip "Cari materi" di kepala panel pembimbing PAW (`features/ui/fiezel-coach-bubble.js`, opsi `openAsk` dari `syncCoachBubble()` app.js), i18n `coach.cari-materi` id+th.
+- Gerbang baru `tests/view-reachability-test.js` (VALID_VIEWS + alias renderInner + pintu, semua ditemukan dari kode); terdaftar di quality.yml. Merah pada app.js main, hijau sesudah.
+- Handoff: `docs/handoffs/FIEZEL-M025266-PINTU-TANYA-FIEZEL-HANDOFF.md`.
+- Backlog terdekat (PR terpisah): tiga chip + aria-label gelembung di coach-bubble masih teks Indonesia langsung (murid Thai melihat chip Indonesia).

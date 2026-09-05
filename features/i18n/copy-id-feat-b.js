@@ -210,6 +210,8 @@
     'coach.input-placeholder': 'Tanya apa aja\u2026',
     'coach.input-aria': 'Tanya FIEZEL',
     'coach.send-aria': 'Kirim',
+    // m025-266: label pintu ke layar Tanya FIEZEL dari kepala panel pembimbing
+    'coach.cari-materi': 'Cari materi',
 
     // ---------- features/speaking-listening/fiezel-speaking-listening-addon.js (10 titik; template raksasa + kanon ditunda, lihat handoff) ----------
     'skillslab.replay-limit': 'Jatah putar item ini sudah habis.',

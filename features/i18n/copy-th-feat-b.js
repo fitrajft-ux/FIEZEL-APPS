@@ -207,6 +207,8 @@
     'coach.input-placeholder': 'ถามได้ทุกเรื่อง…',
     'coach.input-aria': 'ถาม FIEZEL',
     'coach.send-aria': 'ส่ง',
+    // m025-266: label pintu ke layar Tanya FIEZEL dari kepala panel pembimbing
+    'coach.cari-materi': 'ค้นหาเนื้อหา',
 
     // ---------- skillslab.* ----------
     'skillslab.replay-limit': 'โควตาการเปิดข้อนี้หมดแล้ว',

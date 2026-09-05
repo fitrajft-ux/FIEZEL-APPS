@@ -340,6 +340,14 @@
            * di bawah); disconnectedCallback maskot membersihkan semua timernya. */
           '<span class="fz-coach-avatar"><span class="fz-i fz-coach-face" aria-hidden="true">' + icon('paw') + '</span></span>' +
           T('coach.fiezel-pembimbing-you') +
+          /* m025-266: pintu ke layar Tanya FIEZEL (indeks materi lokal + jawaban panjang).
+           * Tombolnya hanya lahir kalau app.js memberi openAsk - modul ini tidak tahu nama
+           * rute, dan tanpa tujuan pintu buntu lebih buruk daripada tidak ada pintu. Tanpa
+           * ikon dengan sengaja: tests/paw-mascot-test.js menuntut setiap icon() di berkas
+           * ini berbentuk paw, dan chip teks sudah cukup terbaca di sebelah tombol tutup. */
+          (typeof opts.openAsk === 'function'
+            ? '<button type="button" class="fz-coach-ask-page" data-testid="coach-open-ask">' + esc(T('coach.cari-materi')) + '</button>'
+            : '') +
           '<button type="button" class="fz-coach-close" aria-label="' + T('coach.close-aria') + '">✕</button>' +
         '</div>' +
         '<div class="fz-coach-log" aria-live="polite"></div>' +
@@ -483,6 +491,8 @@
     peek.addEventListener('click', open);
     sheet.addEventListener('click', function (e) { if (e.target === sheet) close(); });
     sheet.querySelector('.fz-coach-close').addEventListener('click', close);
+    var askPageBtn = sheet.querySelector('.fz-coach-ask-page');
+    if (askPageBtn) askPageBtn.addEventListener('click', function () { close(); opts.openAsk(); });
     chipHost.addEventListener('click', function (e) {
       var chip = e.target.closest && e.target.closest('.fz-coach-chip');
       if (chip) ask(chip.getAttribute('data-q'));
