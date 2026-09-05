@@ -24,18 +24,12 @@
 #app .learner-flow-launcher .duel-invite-card{grid-column:1/-1;min-height:112px;background:linear-gradient(135deg,var(--good-soft),#DDF5E6);color:var(--ink);outline:2px dashed var(--good);outline-offset:-8px}
 @media (max-width:720px){#app .learner-flow-launcher{grid-template-columns:1fr}#app .learner-flow-launcher .launch-card{min-height:140px;padding:18px 20px}#app .learner-flow-launcher .launch-card b{font-size:1.15rem}}
 
-/* ---- Taskbar: pil kaca melayang + penanda aktif meluncur ---- */
-.bottomnav{width:min(600px,calc(100% - 20px));padding:8px;gap:2px;border-radius:999px;
-  background:rgba(var(--surface-pure-rgb),.72);backdrop-filter:blur(18px) saturate(1.35);-webkit-backdrop-filter:blur(18px) saturate(1.35);
-  border:1px solid rgba(255,255,255,.7);box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 22px 44px -24px rgba(36,26,17,.55),0 2px 10px -4px rgba(36,26,17,.18)}
-.bottomnav .nav{position:relative;border-radius:999px;padding:9px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color var(--dur-s) var(--ease),transform var(--dur-s) var(--ease-spring)}
-.bottomnav .nav .fz-i{transition:transform var(--dur-m) var(--ease-spring)}
-.bottomnav .nav:hover .fz-i{transform:translateY(-2px) scale(1.06)}
-.bottomnav .nav.active{background:var(--ink);color:#fff;transform:none;font-weight:700;box-shadow:0 6px 16px -8px rgba(36,26,17,.6)}
-.bottomnav .nav.active .fz-i{--fz-i-fill:var(--yellow);--fz-i-line:var(--ink);transform:translateY(-1px)}
-.bottomnav .nav.active::after{content:"";position:absolute;left:50%;bottom:4px;width:14px;height:3px;border-radius:2px;background:var(--yellow);transform:translateX(-50%);animation:navDot var(--dur-m) var(--ease-spring) both}
-@keyframes navDot{from{width:0;opacity:0}to{width:14px;opacity:1}}
-@media (prefers-reduced-motion:reduce){#app .learner-flow-launcher .launch-card,.bottomnav .nav,.bottomnav .nav .fz-i{transition:none}.bottomnav .nav.active::after{animation:none}}
+/* ---- Taskbar: DIPINDAH (m025-266). Pil kaca + penanda aktif yang dulu ada di sini adalah
+   satu dari sembilan definisi .bottomnav yang saling menimpa di empat berkas; blur-nya juga
+   melanggar keputusan baterai m025-81 yang gerbang ui-structure jaga (tetapi hanya di
+   style.css). Satu-satunya definisi rupa tab bar kini di style.css, "Tab bar — satu
+   definisi, bukan enam". ---- */
+@media (prefers-reduced-motion:reduce){#app .learner-flow-launcher .launch-card{transition:none}}
 #app .learner-flow-launcher{background:transparent;padding:0;border:0;box-shadow:none}
 #app .learner-flow-launcher .tutor-launch b,#app .learner-flow-launcher .tutor-launch>span{color:#fff}
 #app .learner-flow-launcher .tutor-launch [data-lucide]{color:var(--yellow);opacity:.9}

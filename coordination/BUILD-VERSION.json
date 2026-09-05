@@ -1,7 +1,7 @@
 {
-  "version": "m025-265",
-  "claimedBy": "branch fix/teacher-modal-keyframe-clash",
-  "claimedAt": "2026-09-05T20:50:00.000Z",
-  "reason": "Nama @keyframes kembar: blok inbox membajak animasi modal Ruang Guru sehingga panel muncul di bawah-kanan",
+  "version": "m025-266",
+  "claimedBy": "branch redesign/chrome-bottomnav",
+  "claimedAt": "2026-09-06T00:10:00.000Z",
+  "reason": "Redesign bottom nav: satu definisi CSS untuk tab bar, kapsul aktif kuning, dua ikon duotone baru (practice, progress)",
   "protocol": "Jangan pernah mengetik nomor build langsung ke sw.js, core-config.js, atau fiezel-diag-panel.js. Jalankan `node tools/bump-build.mjs \"<alasan singkat>\"`. Ia mengambil versi dari origin/main, menaikkan satu, lalu menulis KEEMPAT tempat sekaligus. Kalau dua sesi menaikkan bersamaan, konfliknya jatuh di berkas 8 baris ini - bukan di sw.js atau style.css."
 }

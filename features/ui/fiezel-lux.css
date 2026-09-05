@@ -52,19 +52,8 @@ body.fz-lux .app{max-width:720px;padding:14px 18px calc(124px + env(safe-area-in
 @media(min-width:760px){body.fz-lux .app{padding-top:24px}}
 
 /* ---------- topbar ---------- */
-body.fz-lux .topbar{
-  position:sticky;top:0;z-index:30;margin:0 -18px 14px;padding:10px 18px;
-  background:rgba(255,249,238,.78);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
-  border-bottom:1px solid var(--lux-line-soft);
-}
-body.fz-lux .brand-button{padding:4px 0}
-body.fz-lux .brand{width:96px}
-body.fz-lux .topbar-actions{gap:8px}
-body.fz-lux .icon-button{
-  width:42px;height:42px;border-radius:999px;background:var(--lux-paper);
-  border:1px solid var(--lux-line);color:var(--lux-ink);box-shadow:var(--lux-shadow-sm);
-}
-body.fz-lux .icon-button:hover{transform:translateY(-1px);box-shadow:var(--lux-shadow-md);border-color:var(--lux-ink)}
+/* m025-267: pita topbar, ukuran brand, dan chip ikon yang dulu di sini DIPINDAH ke
+   style.css "Top bar" - satu definisi. Blur-nya juga melanggar keputusan baterai m025-81. */
 body.fz-lux .ask-button{width:auto;height:42px;flex-direction:row;padding:0 14px 0 12px;gap:8px}
 body.fz-lux .ask-button .fiezel-ask-mark{height:16px;width:auto}
 body.fz-lux .ask-button .ask-label{font-size:.8rem;font-weight:700;letter-spacing:.01em;text-transform:none}
@@ -212,8 +201,9 @@ body.fz-lux .exam-entry-chip svg,body.fz-lux .exam-entry-chip i{color:var(--lux-
     left:20px;top:50%;bottom:auto;transform:translateY(-50%);width:84px;padding:10px 8px;
     display:grid;grid-template-columns:1fr;gap:6px;border-radius:28px;
   }
-  html.fiezel-ui-v6 body.fz-lux .nav{min-height:60px;display:grid;place-items:center;gap:4px;padding:8px 4px;border-radius:18px}
-  html.fiezel-ui-v6 body.fz-lux .nav span{font-size:.58rem}
+  /* m025-266: rupa tab (ukuran, kapsul aktif, label 12 px) SATU sumber di style.css;
+     rel ini hanya memindahkan posisi pilnya ke kiri. Label .58rem yang dulu di sini
+     melanggar lantai tipografi 12 px. */
   html.fiezel-ui-v6 body.fz-lux .nav-scrim{display:none}
   html.fiezel-ui-v6 body.fz-lux .app{max-width:956px;padding-left:118px;padding-right:118px;padding-bottom:48px}
 }
@@ -270,23 +260,11 @@ body.fz-lux .setting-icon .fz-i,body.fz-lux .settings-fold .fz-i{--fz-i-fill:var
 body.fz-lux .option.was-tried,body.fz-lux .option.was-tried:disabled{border:1px dashed rgba(36,26,17,.35);background:var(--lux-paper-warm);color:var(--lux-muted);box-shadow:none}
 body.fz-lux .level-picker-grid button,body.fz-lux .level-picker-grid .level-pick{border-radius:var(--lux-r-md)}
 
-/* ---------- tab bar bawah: pil kaca mengambang ---------- */
+/* ---------- tab bar bawah ----------
+   m025-266: pil kaca + tab aktif tinta yang dulu ada di sini DIPINDAH. Rupa tab bar
+   kini satu definisi di style.css ("Tab bar — satu definisi, bukan enam"); blur-nya
+   juga melanggar keputusan baterai m025-81. Yang tinggal hanya peredup dasar layar. */
 body.fz-lux .nav-scrim{height:calc(110px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--lux-cream) 40%,rgba(255,249,238,0))}
-body.fz-lux .bottomnav{
-  width:min(560px,calc(100% - 28px));padding:6px;gap:2px;
-  background:rgba(255,255,255,.86);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
-  border:1px solid var(--lux-line);border-radius:999px;box-shadow:var(--lux-shadow-md);
-}
-body.fz-lux .nav{
-  min-height:52px;border-radius:999px;color:var(--lux-muted);font-size:.66rem;font-weight:700;letter-spacing:.01em;
-  border:0;background:transparent;box-shadow:none;gap:3px;
-}
-body.fz-lux .nav:hover{color:var(--lux-ink);border-color:transparent;box-shadow:none}
-body.fz-lux .nav svg,body.fz-lux .nav .fz-i{width:20px;height:20px}
-body.fz-lux .nav span{white-space:nowrap}
-body.fz-lux:lang(th) .nav span,body.fz-lux .nav span:lang(th){font-size:.58rem;letter-spacing:0}
-body.fz-lux .nav.active{background:var(--lux-ink);color:var(--lux-yellow);font-weight:800;transform:none}
-body.fz-lux .nav.active .fz-i{--fz-i-fill:var(--lux-yellow);--fz-i-line:var(--lux-yellow)}
 
 /* ---------- menyembunyikan panel yang tidak penting bagi murid ---------- */
 body.fz-lux .progress-tab[onclick*="'analysis'"],

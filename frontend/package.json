@@ -1,0 +1,7 @@
+{
+  "name": "fiezel-preview",
+  "private": true,
+  "scripts": {
+    "start": "node ../tools/preview-server.mjs"
+  }
+}

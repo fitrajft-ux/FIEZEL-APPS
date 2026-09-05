@@ -86,6 +86,19 @@
 
        Aturan keluarga tetap: kanvas 24x24, isi di dalam kotak 3..21, satu bidang per
        ikon, sudut membulat, tidak ada warna yang dipaku. */
+    /* m025-266: dua ikon tab bar baru. Kelima ikon nav harus terbaca SATU keluarga pada
+       24 px: siluet bidang yang sebanding, satu detail garis, tidak ada yang lebih ramai
+       sendiri. `skills` (lima batang tipis) dan `map` (lipatan + dua garis) melanggar
+       itu - yang satu terlalu ringan, yang lain terlalu ramai - jadi tab Latihan dan
+       Progres pindah ke dua ikon ini. Keduanya TETAP tersedia untuk kartu di dalam layar. */
+    practice: '<rect class="fz-fill" x="3.6" y="7" width="13.6" height="13.4" rx="3.4"/>' +
+      '<rect class="fz-line" x="3.6" y="7" width="13.6" height="13.4" rx="3.4"/>' +
+      '<path class="fz-line" d="M7.4 7V6.2a2.6 2.6 0 0 1 2.6-2.6h7.8a2.6 2.6 0 0 1 2.6 2.6v7.6a2.6 2.6 0 0 1-2.6 2.6h-.6"/>' +
+      '<path class="fz-line" d="m7.6 13.8 2.2 2.2 4.2-4.6"/>',
+    progress: '<rect class="fz-fill" x="3.6" y="3.6" width="16.8" height="16.8" rx="4.4"/>' +
+      '<rect class="fz-line" x="3.6" y="3.6" width="16.8" height="16.8" rx="4.4"/>' +
+      '<path class="fz-line" d="m7.2 15.4 3.4-3.8 2.6 2.4 4-4.6"/>' +
+      '<path class="fz-line" d="M14.4 9.4h2.8v2.8"/>',
     home: '<path class="fz-fill" d="M12 3.6 21 11v7.6a2.4 2.4 0 0 1-2.4 2.4H5.4A2.4 2.4 0 0 1 3 18.6V11z"/>' +
       '<path class="fz-line" d="M12 3.6 21 11v7.6a2.4 2.4 0 0 1-2.4 2.4H5.4A2.4 2.4 0 0 1 3 18.6V11z"/>' +
       '<path class="fz-line" d="M9.5 21v-4.6a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V21"/>',
@@ -119,9 +132,11 @@
       '<path class="fz-line" d="M5.4 6.9c0-.5.4-.9.9-.9h2.2c.5 0 .9.4.9.9v11.2c0 .5-.4.9-.9.9H6.3a.9.9 0 0 1-.9-.9z"/>' +
       '<path class="fz-line" d="M11 6.9c0-.5.4-.9.9-.9h1.6c.5 0 .9.4.9.9v11.2c0 .5-.4.9-.9.9h-1.6a.9.9 0 0 1-.9-.9z"/>' +
       '<path class="fz-line" d="m16.4 7.6 1.7-.4c.5-.1 1 .2 1.1.7l2 9.6c.1.5-.2 1-.7 1.1l-1.4.3"/>',
-    classroom: '<rect class="fz-fill" x="4.4" y="5" width="15.2" height="10" rx="2.4"/>' +
-      '<rect class="fz-line" x="4.4" y="5" width="15.2" height="10" rx="2.4"/>' +
-      '<path class="fz-line" d="M12 15v3.4M8.6 18.4h6.8M8 9.2h5.6M8 11.8h3.4"/>',
+    /* m025-266: papan kelas disederhanakan - satu goresan kapur, bukan tiga baris teks,
+       supaya di 24 px ia sebobot tetangganya di tab bar. */
+    classroom: '<rect class="fz-fill" x="3.8" y="4" width="16.4" height="12.4" rx="3.2"/>' +
+      '<rect class="fz-line" x="3.8" y="4" width="16.4" height="12.4" rx="3.2"/>' +
+      '<path class="fz-line" d="M12 16.4v3.6M8.8 20h6.4M8.2 10.2h5.6"/>',
     skills: '<path class="fz-fill" d="M6 10h2.2v4H6zM10.9 7.4h2.2v9.2h-2.2zM15.8 9h2.2v6h-2.2z"/>' +
       '<path class="fz-line" d="M6.9 9.4v5.2M12 6.6v10.8M17.1 8.4v7.2M3.6 11.2v1.6M20.4 11.2v1.6"/>',
     /* m025-246: tab bar sekarang punya EMPAT tujuan dan salah satunya Pengaturan.
@@ -146,10 +161,12 @@
     flame: '<path class="fz-fill" d="M12 3.8c3.4 3 5 5.3 5 7.9a5 5 0 0 1-10 0c0-1.5.6-2.9 1.8-4.4.5 1 .9 1.6 1.6 2 .2-2.1.7-3.9 1.6-5.5z"/>' +
       '<path class="fz-line" d="M12 3.8c3.4 3 5 5.3 5 7.9a5 5 0 0 1-10 0c0-1.5.6-2.9 1.8-4.4.5 1 .9 1.6 1.6 2 .2-2.1.7-3.9 1.6-5.5z"/>' +
       '<path class="fz-line" d="M12 12.6c1.2 1 1.8 1.9 1.8 2.8a1.8 1.8 0 0 1-3.6 0c0-.9.6-1.8 1.8-2.8z"/>',
-    /* Profil murid / akun dan teman untuk navigasi utama */
-    profile: '<circle class="fz-fill" cx="12" cy="8" r="4.2"/>' +
-      '<circle class="fz-line" cx="12" cy="8" r="4.2"/>' +
-      '<path class="fz-line" d="M4.6 20.2c0-3.6 3.3-6.4 7.4-6.4s7.4 2.8 7.4 6.4"/>'
+    /* Profil murid / akun dan teman untuk navigasi utama.
+       m025-266: bidangnya pindah ke BAHU, bukan kepala - lingkaran r4 nyaris tak punya
+       luas, sehingga di tab bar ikon ini terbaca garis tipis di antara empat bidang. */
+    profile: '<path class="fz-fill" d="M4.4 20.4c0-4 3.4-7 7.6-7s7.6 3 7.6 7z"/>' +
+      '<path class="fz-line" d="M4.4 20.4c0-4 3.4-7 7.6-7s7.6 3 7.6 7"/>' +
+      '<circle class="fz-line" cx="12" cy="7.8" r="4.2"/>'
   };
 
   var SVG_HEAD = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">';

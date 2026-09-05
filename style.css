@@ -38,7 +38,7 @@
   --orbit-y:10%;
   --ambient-text:#241A11;
   --ambient-muted:#6E5E47;
-  --chrome-bg:rgba(255,249,238,.82);
+  --chrome-bg:rgba(255,249,238,.94);
   --launcher-start:#FFF3C4;
   --launcher-end:#FFC700;
   --bg:#FFF9EE;
@@ -2556,12 +2556,12 @@ button.primary:active,.primary.luxe:active,html.fiezel-ui-v6 body .primary:activ
 /* i10 2026-08-28 (O5 §2): + :not(.option) — empat tombol jawaban berbayang tebal membuat
    layar soal terasa seperti empat kartu bersaing dengan soalnya; pilihan kembali ke resep
    dasar .option yang tenang (garis --line, tanpa bayangan lantai). */
-html.fiezel-ui-v6 body button:not(.primary):not(.nav):not(.icon-button):not(.text-button):not(.coach-link):not(.fz-coach-bubble):not(.launch-card):not(.skill-card):not(.option):not(.skill-help-dot):not(.olm-dispute){
+html.fiezel-ui-v6 body button:not(.primary):not(.nav):not(.icon-button):not(.brand-button):not(.text-button):not(.coach-link):not(.fz-coach-bubble):not(.launch-card):not(.skill-card):not(.option):not(.skill-help-dot):not(.olm-dispute){
   border:1.5px solid var(--surface-edge);border-radius:var(--radius-md);
   box-shadow:var(--lift-edge);
   transition:transform var(--dur-xs) var(--ease),box-shadow var(--dur-xs) var(--ease);
 }
-html.fiezel-ui-v6 body button:not(.primary):not(.nav):not(.icon-button):not(.text-button):not(.coach-link):not(.fz-coach-bubble):not(.launch-card):not(.skill-card):not(.option):not(.skill-help-dot):not(.olm-dispute):active{
+html.fiezel-ui-v6 body button:not(.primary):not(.nav):not(.icon-button):not(.brand-button):not(.text-button):not(.coach-link):not(.fz-coach-bubble):not(.launch-card):not(.skill-card):not(.option):not(.skill-help-dot):not(.olm-dispute):active{
   transform:translateY(2px);box-shadow:var(--lift-edge-press)}
 
 /* --------------------------------------------------------------------------
@@ -3134,48 +3134,118 @@ eteach) dan tawaran berhenti (reathe).
 }
 
 /* ==========================================================================
-   Tab bar — berat, bukan garis tipis (m025-129)
+   Tab bar — satu definisi, bukan enam (m025-129 -> m025-266)
    ==========================================================================
-   OWNER: "icon taskbarnya terlalu jadul kurang modern dan eye catching."
+   OWNER (m025-129): "icon taskbarnya terlalu jadul kurang modern dan eye catching."
+   OWNER (m025-266): tampilannya masih "kurang".
 
-   Ikonnya sendiri sudah digambar ulang di fiezel-icons.js - bidang jadi bentuk utamanya,
-   garis tinggal menegaskan tepi. Yang tersisa di sini adalah wadahnya, dan wadahnya punya
-   masalah yang sama: tab aktif hanya berubah warna latar. Perubahan warna adalah sinyal
-   TERLEMAH yang dimiliki antarmuka - ia tidak punya berat, tidak punya gerak, dan pada
-   layar terang nyaris tidak terbaca sama sekali.
+   Diagnosis m025-266, bukan selera: sebelum blok ini, tab bar didefinisikan oleh ENAM
+   blok .bottomnav/.nav yang saling menimpa dari enam redesign berbeda - lebar pil
+   560/620/580, ikon 18/24/26/22 px, dan EMPAT definisi keadaan aktif yang menumpuk:
+   kapsul kuning + naik 2 px + bayangan 2 px + titik coklat + tebal 700. Hasilnya bukan
+   yang dirancang siapa pun, melainkan penulis-terakhir yang menang. Titik coklat di
+   bawah label terbaca sebagai noda, dan ikon tidak-aktif berbidang --surface-mute
+   (nyaris putih di atas putih) sehingga lima ikon tampil sebagai empat garis + satu
+   bidang - bukan satu keluarga.
 
-   Tab aktif kini mendapat tiga hal sekaligus: ia NAIK, ia punya bayangan padat 2 px
-   seperti tombol chunky di seluruh aplikasi, dan ikonnya MEMANTUL sekali saat dipilih.
-   Ketiganya bahasa yang sudah dipakai FIEZEL - tidak ada kosakata visual baru yang
-   diperkenalkan hanya untuk tab bar.
+   Kontrak baru, satu sinyal bentuk + satu sinyal warna:
+     - Tab aktif = KAPSUL KUNING (--sun) di belakang ikon, ikon berbidang putih dengan
+       garis tinta, label tinta 700. Kapsulnya digambar ::after (penanda bentuk yang
+       bekerja tanpa warna - kontrak paw-mascot-test tetap dipegang), dan tab NAIK 3 px.
+     - Tab tidak aktif = ikon berbidang --sun-soft (pastel yang TERLIHAT), garis --muted,
+       label --muted 600. Kelima ikon kini punya bidang sebanding.
+     - Label 12 px: lantai tipografi F2-15, bukan 11 px seperti blok yang dihapus.
+   Blok .bottomnav/.nav yang lebih awal di berkas ini SENGAJA tidak dihapus: gerbang
+   ui-structure/ux-redesign/a11y membaca literal di sana (glass-solid, z-index:40,
+   width:calc(100% - 16px), min-height:44px). Blok ini penulis terakhir untuk semua
+   properti yang menentukan rupa.
    -------------------------------------------------------------------------- */
 
-.nav .fz-i{width:26px;height:26px}
+.bottomnav{
+  width:min(560px,calc(100% - 24px));padding:6px;gap:2px;
+  border:1px solid var(--line);border-radius:var(--radius-xl);
+  box-shadow:0 14px 34px -14px rgba(36,26,17,.28),0 1px 2px rgba(36,26,17,.06);
+}
+.nav,.bottomnav .nav{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
+  min-height:56px;padding:5px 2px 6px;border:0;border-radius:var(--radius-md);
+  font-size:var(--fs-caption);font-weight:600;letter-spacing:.01em;line-height:1.35;color:var(--muted);
+  background:transparent;box-shadow:none;
+  transition:transform .22s var(--ease-spring),color .16s var(--ease);
+}
+.nav .fz-i{width:24px;height:24px;position:relative;z-index:1;margin-top:3px;--fz-i-fill:var(--sun-soft);--fz-i-line:var(--muted)}
 .nav .fz-i .fz-line{stroke-width:2}
-
-html.fiezel-ui-v6 .nav{
-  gap:5px;border-radius:var(--radius-md);
-  transition:transform .18s var(--ease-spring),background .16s var(--ease),color .16s var(--ease),box-shadow .16s var(--ease);
+.nav span{position:relative;z-index:1;white-space:nowrap}
+.nav:hover{background:transparent}
+.nav:active{transform:scale(.95)}
+/* Kapsul kuning di belakang ikon. Ukurannya 46x30 - lebih lebar dari ikon 24 px supaya
+   terbaca sebagai wadah, bukan sebagai garis tepi ikon. */
+.nav.active::after{
+  content:"";position:absolute;top:0;left:50%;width:46px;height:30px;margin-left:-23px;
+  border-radius:var(--radius-pill);background:var(--sun);z-index:0;
 }
-html.fiezel-ui-v6 .nav.active{
+.nav.active,.bottomnav .nav.active{
+  color:var(--ink);font-weight:700;background:transparent;box-shadow:none;
   transform:translateY(-3px);
-  box-shadow:0 2px 0 var(--sun-deep);
 }
-/* Titik di bawah label. Penanda kedua yang tidak bergantung pada warna sama sekali -
-   satu-satunya bagian dari state aktif yang tetap terbaca oleh mata yang sulit
-   membedakan kuning pastel dari cream. */
-html.fiezel-ui-v6 .nav.active::after{
-  content:"";width:5px;height:5px;border-radius:50%;background:var(--ink);
-  margin-top:-1px;
-}
+.nav.active .fz-i,.bottomnav .nav.active .fz-i{--fz-i-fill:var(--panel);--fz-i-line:var(--ink)}
 
 @media (prefers-reduced-motion:no-preference){
-  html.fiezel-ui-v6 .nav.active .fz-i{animation:fzNavPop .42s cubic-bezier(.3,1.32,.5,1) 1}
+  .nav.active .fz-i{animation:fzNavPop .42s cubic-bezier(.3,1.32,.5,1) 1}
   @keyframes fzNavPop{
     0%{transform:scale(.84) translateY(2px)}
     58%{transform:scale(1.12) translateY(-1px)}
     100%{transform:scale(1) translateY(0)}
   }
+}
+
+/* ==========================================================================
+   Top bar — wordmark telanjang, dua ikon sunyi (m025-267)
+   ==========================================================================
+   Diagnosis, bukan selera. Sebelum blok ini topbar dirakit tiga berkas: tutor-v3.css
+   memberinya radius 18 + border + bayangan + blur (kartu melayang), fiezel-lux.css
+   memberinya margin -18px + border-bottom + blur (pita penuh), fiezel-2.css memangkas
+   tingginya. Hasilnya pita penuh-lebar dengan sudut membulat dan bayangan - dua ide
+   sekaligus, tidak satu pun utuh. Yang lebih fatal: .brand-button tidak dikecualikan
+   dari resep "tombol chunky" v6, jadi WORDMARK DUDUK DI DALAM KOTAK PUTIH bergaris,
+   sama beratnya dengan chip lonceng dan chip gigi di seberangnya. Tiga benda, tiga
+   kotak, satu suara - tidak ada hierarki.
+
+   Kontrak baru:
+     - Topbar = PIL LENGKET dengan material yang SAMA dengan tab bar (--glass-solid,
+       border --line, --radius-xl, bayangan yang sama): dua pil, atas dan bawah, satu
+       keluarga. Tanpa blur (keputusan baterai m025-81 kini berlaku juga di sini);
+       --chrome-bg dipekatkan ke .94 untuk pemakai lain yang masih membacanya.
+     - Wordmark TELANJANG di atas pil: tidak ada kotak, tidak ada border. Ia satu-
+       satunya benda bertinta penuh di baris ini, jadi ia yang menang.
+     - Lonceng dan gigi = cakram --panel-soft 44 px tanpa border dan tanpa bayangan:
+       hadir, tetapi bicara pelan. Lencana merah di lonceng tetap aksen kuat satu-satunya.
+     - Gigi Pengaturan TIDAK boleh disembunyikan: satu-satunya pintu Pengaturan dalam
+       mode pelajaran; tiga langkah tur menunjuknya.
+   -------------------------------------------------------------------------- */
+.topbar{
+  position:sticky;top:8px;z-index:35;margin:0 0 18px;padding:6px 8px 6px 16px;min-height:60px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--glass-solid);border:1px solid var(--line);border-radius:var(--radius-xl);
+  box-shadow:0 14px 34px -14px rgba(36,26,17,.28),0 1px 2px rgba(36,26,17,.06);
+}
+.topbar .brand-button{padding:6px 0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;min-height:44px}
+.topbar .brand-button:hover,.topbar .brand-button:active{transform:none;background:transparent;box-shadow:none}
+.topbar .brand{width:100px}
+.topbar-actions{gap:4px}
+.topbar .icon-button{
+  width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;
+  background:var(--panel-soft);border:0;box-shadow:none;color:var(--ink);
+  transition:background-color var(--dur-s) var(--ease),transform var(--dur-s) var(--ease-spring);
+}
+.topbar .icon-button svg{width:20px;height:20px}
+.topbar .icon-button:hover{background:var(--sun-soft);transform:none;box-shadow:none}
+.topbar .icon-button:active{transform:scale(.94)}
+.topbar .notif-button.has-new{background:var(--sun-soft)}
+.topbar .notif-badge{top:2px;right:2px;box-shadow:0 0 0 2px var(--glass-solid)}
+@media(max-width:640px){
+  .topbar{top:6px;margin:0 0 16px;padding:5px 6px 5px 14px;min-height:56px}
+  .topbar .brand{width:92px}
 }
 
 /* ==========================================================================
@@ -4890,65 +4960,12 @@ html body #app .social-home-launcher .launch-card{background:var(--pz-sky);borde
 .notif-item.is-social{background:var(--pz-mint);border-color:var(--pz-mint-line)}
 .notif-item.is-invite{background:var(--pz-pink);border-color:var(--pz-pink-line)}
 /* Nav bawah: pil putih, tab aktif tinta gelap dengan ikon emas */
-.bottomnav{background:var(--glass-solid);border-color:#E6DCC8;box-shadow:0 14px 40px -18px rgba(36,26,17,.35)}
-.bottomnav .nav.active .fz-i{color:var(--yellow)}
+.bottomnav{background:var(--glass-solid)}
 /* Topbar: lonceng & pengaturan sebagai chip pastel */
 .topbar .icon-button{background:#fff;border:1px solid var(--line)}
 .notif-button.has-new{background:var(--pz-yellow)}
 /* Tombol utama tetap kuning ceria */
 .primary{background:var(--yellow);color:var(--ink)}
-
-/* ==========================================================================
-   FIEZEL REDESIGN: Version B Tactile Bottom Navigation
-   ========================================================================== */
-.bottomnav {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 2px;
-  width: min(580px, calc(100% - 20px));
-  padding: 6px 4px;
-  border-radius: var(--radius-xl, 24px);
-  box-shadow: 0 10px 30px rgba(36, 26, 17, 0.12), 0 2px 0 var(--line);
-  background: var(--glass-solid);
-}
-.bottomnav .nav {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 8px 2px;
-  min-height: 48px;
-  border-radius: var(--radius-lg, 16px);
-  font-size: 11px;
-  font-weight: 600;
-  transition: transform var(--dur-s) var(--ease), background var(--dur-s) var(--ease), color var(--dur-s) var(--ease);
-}
-.bottomnav .nav .fz-i {
-  width: 22px;
-  height: 22px;
-}
-.bottomnav .nav:active {
-  transform: scale(0.94);
-}
-.bottomnav .nav.active {
-  background: var(--sun-soft);
-  color: var(--text);
-  font-weight: 700;
-  box-shadow: 0 2px 0 rgba(230, 168, 0, 0.35);
-  transform: translateY(-2px);
-}
-.bottomnav .nav.active .fz-i {
-  --fz-i-fill: var(--sun);
-  --fz-i-line: var(--text);
-}
-.bottomnav .nav[data-view="home"] {
-  position: relative;
-}
-.bottomnav .nav[data-view="home"].active {
-  background: var(--sun-soft);
-  box-shadow: 0 3px 0 rgba(230, 168, 0, 0.4);
-}
 
 /* ==========================================================================
    FIEZEL REDESIGN: Version B PAW Mascot Hero & Contextual Speech Bubble

@@ -1,0 +1,21 @@
+// Cetak gaya terhitung satu selektor di satu lebar. node tools/dev/computed.mjs 390 ".nav.active" display,border,background
+import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
+import { createRequire } from 'node:module'; import { fileURLToPath } from 'node:url';
+const require = createRequire(import.meta.url);
+const pw = require('/usr/lib/node_modules/playwright');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const [w, sel, props] = [Number(process.argv[2] || 390), process.argv[3] || '.nav.active', (process.argv[4] || 'display').split(',')];
+const server = http.createServer((req, res) => { let p = decodeURIComponent((req.url || '/').split('?')[0]); if (p.endsWith('/')) p += 'index.html';
+  const f = path.join(ROOT, p); fs.stat(f, (e, st) => { if (e || !st.isFile()) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': f.endsWith('.css') ? 'text/css' : f.endsWith('.js') ? 'text/javascript' : f.endsWith('.html') ? 'text/html' : 'application/octet-stream' }); fs.createReadStream(f).pipe(res); }); });
+await new Promise(r => server.listen(0, '127.0.0.1', r)); const port = server.address().port;
+const browser = await pw.chromium.launch({ args: ['--no-sandbox'] });
+const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
+await ctx.route('**/*', r => r.request().url().startsWith(`http://127.0.0.1:${port}/`) ? r.continue() : r.abort());
+const page = await ctx.newPage();
+await page.addInitScript(() => { localStorage.clear(); localStorage.setItem('fiezel-onboarding-v1', JSON.stringify({ done: true, at: Date.now(), via: 'finish', locale: 'id', name: 'Rani' })); localStorage.setItem('fiezel-reminder-invite-v1', JSON.stringify({ offers: 9, decided: true })); localStorage.setItem('fiezel-puter-auth-skipped', '1'); localStorage.setItem('fiezel-tour-v1', 'finish'); });
+await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: 'load' });
+await page.waitForFunction(() => typeof window.go === 'function', null, { timeout: 45000 }).catch(() => {});
+await page.waitForTimeout(3000);
+const out = await page.evaluate(([sel, props]) => { const el = document.querySelector(sel); if (!el) return 'no el'; const cs = getComputedStyle(el); const o = {}; for (const p of props) o[p] = cs.getPropertyValue(p); o.rect = el.getBoundingClientRect().toJSON(); return o; }, [sel, props]);
+console.log(JSON.stringify(out, null, 1));
+await browser.close(); server.close();

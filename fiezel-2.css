@@ -17,11 +17,8 @@ body.fz-lux .section-head h1,body .section-head h1{font-size:1.9rem;line-height:
 body.fz-lux .today-title,body .today-title{font-weight:700;font-size:clamp(1.6rem,4.5vw,2rem);letter-spacing:-.03em}
 body.fz-lux .eyebrow,body .eyebrow,body.fz-lux .today-eyebrow,body .today-eyebrow,body.fz-lux .today-isi-head,body .today-isi-head,body.fz-lux .modal-mark,body .modal-mark{font-size:.72rem;letter-spacing:.14em;color:var(--muted)}
 
-/* ---------- topbar ringkas ---------- */
-body.fz-lux .topbar,body .topbar{margin-bottom:16px;min-height:52px}
-body.fz-lux .brand,body .brand{width:96px}
-body.fz-lux .icon-button,body .icon-button{width:42px;height:42px;min-height:42px;padding:0;border-radius:999px;background:var(--panel);border:1px solid var(--line);box-shadow:none}
-body.fz-lux .icon-button:hover,body .icon-button:hover{transform:none;box-shadow:var(--shadow-sm)}
+/* ---------- topbar ----------
+   m025-267: aturan topbar/brand/icon-button DIPINDAH ke style.css "Top bar". */
 body.fz-lux .version,body .version{display:none}
 
 /* ---------- tombol: pill tactile (specificity > body.fz-lux) ---------- */
@@ -75,12 +72,10 @@ body.fz-lux .progress-tabs,body .progress-tabs{background:var(--panel-soft);padd
 body.fz-lux .progress-tab,body .progress-tab{border-radius:999px;font-weight:700;min-height:40px;box-shadow:none}
 body.fz-lux .progress-tab.active,body .progress-tab.active{background:var(--panel);color:var(--text);border-color:transparent;box-shadow:var(--shadow-sm)}
 
-/* ---------- bottom nav: pill mengambang ---------- */
-body.fz-lux .bottomnav,body .bottomnav{border-radius:999px;padding:6px;background:rgba(255,255,255,.96);border:1px solid var(--line);box-shadow:var(--shadow-md);gap:2px}
-body.fz-lux .nav,body .nav{border-radius:999px;padding:8px 2px;font-weight:700;font-size:.7rem;color:var(--muted);min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
-body.fz-lux .nav.active,body .nav.active{background:var(--sun);color:var(--text);transform:none}
-body.fz-lux .nav .fz-i,body .nav .fz-i{width:22px;height:22px}
-body.fz-lux .nav.active .fz-i,body .nav.active .fz-i{--fz-i-line:var(--text)}
+/* ---------- bottom nav ----------
+   m025-266: enam aturan .bottomnav/.nav yang dulu di sini (label .7rem, ikon 22 px,
+   aktif = lingkaran kuning penuh) DIPINDAH ke style.css, satu definisi untuk semua
+   berkas. Lapisan ini tidak lagi menyentuh tab bar. */
 
 /* ---------- kuis: opsi berhuruf + umpan balik sheet ---------- */
 body.fz-lux .quiz-topbar,body .quiz-topbar{align-items:center}
