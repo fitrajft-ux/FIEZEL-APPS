@@ -1,0 +1,224 @@
+{
+  "schema": "fiezel-th-ui-leak-v1",
+  "generatedAt": "2026-09-05T22:20:22.636Z",
+  "files": {
+    "app.js": {
+      "leaks": 1,
+      "budget": 1,
+      "sample": [
+        {
+          "line": 8606,
+          "text": "Nama kriteria: n/4 - satu kalimat alasan yang menunjuk bukti di tulisannya"
+        }
+      ]
+    },
+    "features/brain/fiezel-olm.js": {
+      "leaks": 1,
+      "budget": 1,
+      "sample": [
+        {
+          "line": 219,
+          "text": "%. Jawaban-jawabanmu lebih akurat daripada taksiranmu \\u2014 saat polanya sudah dikenali,"
+        }
+      ]
+    },
+    "features/brain/fiezel-tutor-brain.js": {
+      "leaks": 3,
+      "budget": 3,
+      "sample": [
+        {
+          "line": 538,
+          "text": "Belum tepat, dan itu wajar di bagian ini."
+        },
+        {
+          "line": 543,
+          "text": "Petunjuknya ada di kata yang menunjukkan kapan kejadiannya. Coba lagi."
+        },
+        {
+          "line": 553,
+          "text": "Belum ada jawaban di sesi ini."
+        }
+      ]
+    },
+    "features/class-hub/fiezel-class-hub.js": {
+      "leaks": 1,
+      "budget": 1,
+      "sample": [
+        {
+          "line": 98,
+          "text": "Tugas disimpan sebagai"
+        }
+      ]
+    },
+    "features/neural-voice/fiezel-cf-voice-notice.js": {
+      "leaks": 3,
+      "budget": 3,
+      "sample": [
+        {
+          "line": 79,
+          "text": "Suara cadanganku dulu, ya. Ini bukan kesalahanmu dan nggak ada yang hilang."
+        },
+        {
+          "line": 84,
+          "text": "Suara gagal disiapkan"
+        },
+        {
+          "line": 90,
+          "text": "Suara belum tersedia untuk kalimat ini"
+        }
+      ]
+    },
+    "features/neural-voice/fiezel-diag-panel.js": {
+      "leaks": 6,
+      "budget": 6,
+      "sample": [
+        {
+          "line": 328,
+          "text": "Cari event penting langsung di bawah. Kirim isi kotak ini ke coordinator bila perlu."
+        },
+        {
+          "line": 336,
+          "text": "Cari: wasm_policy, timeout, adapter..."
+        },
+        {
+          "line": 367,
+          "text": "Kirim"
+        },
+        {
+          "line": 371,
+          "text": "Kirim ringkas"
+        },
+        {
+          "line": 375,
+          "text": "Tutup"
+        }
+      ]
+    },
+    "features/neural-voice/fiezel-neural-voice-audibility-fix.js": {
+      "leaks": 2,
+      "budget": 2,
+      "sample": [
+        {
+          "line": 129,
+          "text": "Suara neural aktif"
+        },
+        {
+          "line": 139,
+          "text": "Aktifkan suara neural"
+        }
+      ]
+    },
+    "features/onboarding/fiezel-onboarding.js": {
+      "leaks": 1,
+      "budget": 1,
+      "sample": [
+        {
+          "line": 627,
+          "text": "Pilih bahasa untuk melanjutkan"
+        }
+      ]
+    },
+    "features/prasasti/fiezel-prasasti-core.js": {
+      "leaks": 3,
+      "budget": 3,
+      "sample": [
+        {
+          "line": 41,
+          "text": "Belajar bermakna 7 hari beruntun."
+        },
+        {
+          "line": 42,
+          "text": "Belajar bermakna 30 hari beruntun."
+        },
+        {
+          "line": 43,
+          "text": "Belajar bermakna 100 hari beruntun — kebiasaan yang sudah jadi milikmu."
+        }
+      ]
+    },
+    "features/quota/quota-copy.js": {
+      "leaks": 5,
+      "budget": 5,
+      "sample": [
+        {
+          "line": 123,
+          "text": "Suara cadanganku dulu, ya. Ini bukan kesalahanmu dan nggak ada yang hilang."
+        },
+        {
+          "line": 128,
+          "text": "Suara gagal disiapkan"
+        },
+        {
+          "line": 134,
+          "text": "Suara belum tersedia untuk kalimat ini"
+        },
+        {
+          "line": 152,
+          "text": "Suara dari perangkatmu tetap jalan, dan latihan yang sudah tersimpan tetap bisa kamu kerjakan."
+        },
+        {
+          "line": 160,
+          "text": "Masuk lagi sebentar, ya. Yang sudah selesai tetap aman."
+        }
+      ]
+    },
+    "features/speaking-listening/listening-scenarios-a1.js": {
+      "leaks": 11,
+      "budget": 11,
+      "sample": [
+        {
+          "line": 31,
+          "text": "Kelas malam yang diikuti ibunya setiap minggu"
+        },
+        {
+          "line": 41,
+          "text": "Kembali ke toko"
+        },
+        {
+          "line": 79,
+          "text": "Guru baru di kelasnya"
+        },
+        {
+          "line": 151,
+          "text": "Guru yang melukis laut untuk kelasnya"
+        },
+        {
+          "line": 183,
+          "text": "Guru yang mencetakkan laporan untuknya"
+        }
+      ]
+    },
+    "features/speaking-listening/listening-scenarios-a2.js": {
+      "leaks": 12,
+      "budget": 12,
+      "sample": [
+        {
+          "line": 26,
+          "text": "Guru yang kesal dengan acara di museum sore itu"
+        },
+        {
+          "line": 51,
+          "text": "Kembali lagi keesokan harinya"
+        },
+        {
+          "line": 106,
+          "text": "Daftar nama dan hari untuk kebun sekolah"
+        },
+        {
+          "line": 106,
+          "text": "Daftar murid yang bergabung ke kelasnya"
+        },
+        {
+          "line": 109,
+          "text": "Daftar sebenarnya tidak berguna"
+        }
+      ]
+    }
+  },
+  "copyKeys": {
+    "id": 2205,
+    "th": 2207,
+    "idTanpaTh": 0
+  },
+  "pass": true
+}

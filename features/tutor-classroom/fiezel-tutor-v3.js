@@ -14,6 +14,11 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
   'use strict';
 
+  /* m025-265 · sapuan kebocoran Thai: naskah di berkas ini dulu literal Indonesia,
+     jadi murid yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft:
+     kalau copy-map belum termuat, fallback id-lah yang tampil. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
+
   // AI-02 F01: naskah murid diambil dari lapisan i18n (copy-id-feat-b.js). Di browser
   // runtime-nya dimuat lebih dulu (index.html); di Node modul memuatnya sendiri supaya
   // keluaran render tetap byte-identik dengan sebelumnya.
@@ -651,7 +656,7 @@
         await speaking;
         if (note) note.textContent = T('tutor.v3-siap-for-pertanyaan-upcoming');
       } catch (error) {
-        if (note) note.textContent = 'Suara tidak berbunyi. Subtitle dan lesson state tetap aman.';
+        if (note) note.textContent = t('tutorv3.suara-gagal-note', 'Suara tidak berbunyi. Subtitle dan lesson state tetap aman.');
       } finally {
         voiceBusy = false;
       }

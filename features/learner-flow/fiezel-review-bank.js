@@ -10,6 +10,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  /* m025-265 · sapuan kebocoran Thai: naskah di berkas ini dulu literal Indonesia,
+     jadi murid yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft:
+     kalau copy-map belum termuat, fallback id-lah yang tampil. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
+
   var AREAS = { grammar: 'Grammar', vocabulary: 'Vocabulary', reading: 'Reading', listening: 'Listening', speaking: 'Speaking' };
 
   var SKILLS = {
@@ -345,7 +350,7 @@
     }
     return {
       correct: false,
-      text: 'Belum tepat. Kamu memilih “' + picked + '”. ' + (reason ? reason + ' ' : '') + body + ' Coba lagi dengan pola: ' + SKILLS[item.skill].pattern + '.'
+      text: t('review.belum-tepat-pilih', 'Belum tepat. Kamu memilih “{pilihan}”. ').replace('{pilihan}', picked) + (reason ? reason + ' ' : '') + body + t('review.coba-pola', ' Coba lagi dengan pola: {pola}.').replace('{pola}', SKILLS[item.skill].pattern)
     };
   }
 

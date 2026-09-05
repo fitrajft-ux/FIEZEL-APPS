@@ -5620,12 +5620,12 @@ async function checkUrlTeacherToken(){
     url.searchParams.delete('guru_token');
     url.searchParams.delete('invite_teacher');
     window.history.replaceState({},document.title,url.pathname+(url.search?url.search:'')+url.hash);
-    showToast('Mengaktifkan akses Ruang Guru...');
+    showToast(FiezelI18n.t('guru.toast-mengaktifkan'));
     const res=await core.activateTeacher({code:token});
     if(res&&res.ok){
       try{localStorage.setItem('fz_teacher_mode','1')}catch(_){}
       const tName=res.account?.teacherName||'Guru';
-      showToast(`Selamat datang, ${tName}! Ruang Guru aktif.`);
+      showToast(FiezelI18n.t('guru.toast-selamat-datang',{nama:tName}));
       try{
         if(self.FiezelOnboarding?.markCompleted){
           self.FiezelOnboarding.markCompleted(self,{at:Date.now(),via:'token_url',name:tName,role:'guru'});
@@ -6906,7 +6906,7 @@ function continueLearningCard(){
       <b>Present Simple vs Continuous</b>
       <small>Selesaikan materi untuk memperkuat bukti kemahiran</small>
     </div>
-    <div class="continue-card-btn">Lanjut <i data-lucide="play" style="width:14px;height:14px"></i></div>
+    <div class="continue-card-btn">${FiezelI18n.t('home.continue-btn')} <i data-lucide="play" style="width:14px;height:14px"></i></div>
   </div>`;
 }
 function aiBoosterCard(){
@@ -7092,7 +7092,7 @@ function todayHomeMarkup(){
   /* Hero PAW Maskot Hidup dengan Balon Percakapan Kontekstual (Versi B) */
   const heroSpeech=streak>0
     ? `Runtun ${streak} hari! Mantap sekali, ${esc(learnerName())}. Siap lanjut 10 menit hari ini?`
-    : `Halo, ${esc(learnerName())}! Belajar 10 menit hari ini untuk mulai runtun barumu.`;
+    : FiezelI18n.t('home.sapaan-runtun-baru',{nama:esc(learnerName())});
 
   const heroMascotMarkup=`<aside class="paw-hero-cockpit" onclick="pawReact('wake');uiSfx('paw_greet')">
     <div class="paw-hero-avatar" aria-label="Maskot PAW">${pawFaceMarkup()}</div>
@@ -7115,7 +7115,7 @@ function todayHomeMarkup(){
   const quickChips=`<section class="quick-practice-section">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text)">Latihan Singkat 3 Menit</h4>
-      <small style="color:var(--muted)">Pilih fokus</small>
+      <small style="color:var(--muted)">${FiezelI18n.t('home.pilih-fokus-label')}</small>
     </div>
     <div class="quick-chips-grid">
       <button type="button" class="quick-chip" onclick="go('vocab')">
@@ -7914,46 +7914,46 @@ function fiezelAccountSettingsMarkup(){
       <div class="account-card-header">
         <span class="setting-icon"><i data-lucide="user"></i></span>
         <div>
-          <h3>Akun FIEZEL</h3>
-          <p class="muted">Masuk atau daftar untuk menyimpan riwayat belajar dan sinkronisasi antar perangkat.</p>
+          <h3>${FiezelI18n.t('account.card-title')}</h3>
+          <p class="muted">${FiezelI18n.t('account.card-desc')}</p>
         </div>
       </div>
       <div class="setting-row">
         <span class="setting-icon"><i data-lucide="user-x"></i></span>
-        <span><b>Status Akun</b><small>Belum Masuk</small></span>
+        <span><b>${FiezelI18n.t('account.status-label')}</b><small>${FiezelI18n.t('account.status-belum')}</small></span>
       </div>
       <div class="actions" style="margin-top:10px">
-        <button type="button" id="btnFiezelOpenAuth" class="primary" style="width:100%"><i data-lucide="log-in"></i> Masuk / Daftar</button>
+        <button type="button" id="btnFiezelOpenAuth" class="primary" style="width:100%"><i data-lucide="log-in"></i> ${FiezelI18n.t('account.masuk-daftar')}</button>
       </div>
     </div>`;
   }
 
   const isTeacher=acc.role==='teacher';
   const roleBadge=isTeacher
-    ?`<span class="badge badge-success" style="display:inline-flex;align-items:center;gap:4px;font-weight:700"><i data-lucide="check-circle-2"></i> Guru aktif</span>`
-    :`<span class="badge badge-neutral" style="display:inline-flex;align-items:center;gap:4px;font-weight:700"><i data-lucide="user"></i> Murid (Learner)</span>`;
+    ?`<span class="badge badge-success" style="display:inline-flex;align-items:center;gap:4px;font-weight:700"><i data-lucide="check-circle-2"></i> ${FiezelI18n.t('account.badge-guru')}</span>`
+    :`<span class="badge badge-neutral" style="display:inline-flex;align-items:center;gap:4px;font-weight:700"><i data-lucide="user"></i> ${FiezelI18n.t('account.badge-murid')}</span>`;
 
   let teacherSection='';
   if(isTeacher){
     teacherSection=`<div class="teacher-active-box" style="margin-top:12px;padding:12px;background:var(--sun-soft);border-radius:var(--radius-sm);border:1px solid var(--sun-deep)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <i data-lucide="school" style="color:var(--text)"></i>
-        <b>Status Guru Aktif</b>
+        <b>${FiezelI18n.t('guru.status-aktif-judul')}</b>
       </div>
-      <p class="muted" style="font-size:0.85rem;margin:0 0 10px 0">Akun Anda terverifikasi sebagai Guru di server FIEZEL.</p>
-      <button type="button" id="btnOpenTeacherRoom" class="secondary" style="width:100%"><i data-lucide="layout-dashboard"></i> Akses Ruang Guru</button>
+      <p class="muted" style="font-size:0.85rem;margin:0 0 10px 0">${FiezelI18n.t('guru.status-aktif-body')}</p>
+      <button type="button" id="btnOpenTeacherRoom" class="secondary" style="width:100%"><i data-lucide="layout-dashboard"></i> ${FiezelI18n.t('guru.akses-ruang')}</button>
     </div>`;
   } else {
     teacherSection=`<div class="teacher-invite-box" style="margin-top:12px;padding:12px;background:var(--panel-soft);border-radius:var(--radius-sm);border:1px dashed var(--line)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <i data-lucide="key" style="color:var(--text)"></i>
-        <b>Aktivasi Akun Guru</b>
+        <b>${FiezelI18n.t('guru.aktivasi-judul')}</b>
       </div>
-      <p class="muted" style="font-size:0.85rem;margin:0 0 8px 0">Punya kode undangan guru? Masukkan kode 32 karakter untuk mengaktifkan akun Guru.</p>
+      <p class="muted" style="font-size:0.85rem;margin:0 0 8px 0">${FiezelI18n.t('guru.aktivasi-body')}</p>
       <div id="formTeacherActivate" style="display:flex;flex-direction:column;gap:8px">
         <input id="inputTeacherCodeInline" type="text" maxlength="32" placeholder="Kode undangan guru (32 karakter)" style="text-transform:uppercase" autocomplete="off">
         <div id="inlineTeacherError" class="auth-error-box" style="display:none"></div>
-        <button type="button" id="btnSubmitTeacherCodeInline" class="primary"><i data-lucide="award"></i> Aktifkan Akun Guru</button>
+        <button type="button" id="btnSubmitTeacherCodeInline" class="primary"><i data-lucide="award"></i> ${FiezelI18n.t('guru.aktivasi-btn')}</button>
       </div>
     </div>`;
   }
@@ -7962,17 +7962,17 @@ function fiezelAccountSettingsMarkup(){
     <div class="account-card-header">
       <span class="setting-icon"><i data-lucide="shield-check"></i></span>
       <div>
-        <h3>Akun FIEZEL</h3>
+        <h3>${FiezelI18n.t('account.card-title')}</h3>
         <p class="muted">Tersambung dengan server autentikasi FIEZEL.</p>
       </div>
     </div>
     <div class="setting-row">
       <span class="setting-icon"><i data-lucide="at-sign"></i></span>
-      <span><b>Handle Akun</b><small>@${esc(acc.handle)}</small></span>
+      <span><b>${FiezelI18n.t('account.handle-label')}</b><small>@${esc(acc.handle)}</small></span>
     </div>
     <div class="setting-row">
       <span class="setting-icon"><i data-lucide="badge-check"></i></span>
-      <span><b>Peran Akun</b><small>${roleBadge}</small></span>
+      <span><b>${FiezelI18n.t('account.peran-label')}</b><small>${roleBadge}</small></span>
     </div>
     ${teacherSection}
     <div class="actions" style="margin-top:12px">
@@ -8021,7 +8021,7 @@ function bindFiezelAccountControls(){
     if(res?.ok){
       try{localStorage.setItem('fz_teacher_mode','1')}catch(_){}
       const tName=res.account?.teacherName||'Guru';
-      showToast(`Akun Guru aktif! Selamat datang, ${tName}.`);
+      showToast(FiezelI18n.t('guru.toast-akun-aktif',{nama:tName}));
       state.preferences={...state.preferences,role:'guru'};
       state.view='tutor';
       try{save()}catch(_){}
@@ -8045,19 +8045,19 @@ function bindFiezelAccountControls(){
 function openTeacherRoomModal(){
   const acc=self.FiezelAccount?.getAccount?.();
   openModal(`<div class="modal-mark">RUANG GURU FIEZEL</div>
-    <h2>Ruang Guru</h2>
-    <p>Selamat datang, <b>@${esc(acc?.handle||'Guru')}</b>. Akun Anda telah diverifikasi oleh server dengan peran <b>Guru</b>.</p>
+    <h2>${FiezelI18n.t('guru.ruang-judul')}</h2>
+    <p>${FiezelI18n.t('guru.ruang-sapaan',{handle:esc(acc?.handle||'Guru')})}</p>
     <div class="card" style="margin:12px 0;text-align:left">
       <h3 style="margin-bottom:8px"><i data-lucide="check-circle" style="color:#15803d"></i> Hak Akses Pengajar Terbuka:</h3>
       <ul style="padding-left:20px;font-size:0.9rem;line-height:1.6;color:var(--text)">
-        <li><b>Pohon Materi (Curriculum Tree)</b> — Akses kurikulum dan struktur materi.</li>
-        <li><b>Bank Soal Privat</b> — Pembuatan dan pengelolaan latihan soal pengajar.</li>
+        <li><b>${FiezelI18n.t('guru.menu-kurikulum')}</b> — Akses kurikulum dan struktur materi.</li>
+        <li><b>${FiezelI18n.t('guru.menu-bank-soal')}</b> — Pembuatan dan pengelolaan latihan soal pengajar.</li>
         <li><b>Impor & Ekspor CSV</b> — Sinkronisasi bank soal berstandar CEFR.</li>
-        <li><b>Penugasan Kelas</b> — Penugasan latihan dan pemantauan capaian murid.</li>
+        <li><b>${FiezelI18n.t('guru.menu-penugasan')}</b> — Penugasan latihan dan pemantauan capaian murid.</li>
       </ul>
     </div>
     <div class="modal-actions">
-      <button class="primary" id="btnCloseTeacherRoom"><i data-lucide="arrow-left"></i> Kembali ke Pengaturan</button>
+      <button class="primary" id="btnCloseTeacherRoom"><i data-lucide="arrow-left"></i> ${FiezelI18n.t('guru.kembali-pengaturan')}</button>
     </div>`);
   $('btnCloseTeacherRoom').onclick=()=>{closeModal();setTimeout(openSettings,100)};
   enhanceUI();
@@ -8104,7 +8104,7 @@ function openFiezelAuthModal(initialTab){
         <label class="auth-field-label">Kode Undangan Guru
           <input id="authTeacherCode" type="text" placeholder="Kode 32 karakter (Crockford)" maxlength="32" style="text-transform:uppercase" autocomplete="off">
         </label>
-        <p class="muted" style="font-size:0.85rem;margin-top:-2px">Nama & profil lembaga akan terisi otomatis dari token undangan resmi.</p>
+        <p class="muted" style="font-size:0.85rem;margin-top:-2px">${FiezelI18n.t('guru.nama-otomatis')}</p>
         <div id="authModalError" class="auth-error-box" style="display:none"></div>
         <button type="button" id="btnAuthAction" class="primary" style="margin-top:6px">
           <i data-lucide="award"></i> Aktifkan & Buka Ruang Guru
@@ -8113,15 +8113,15 @@ function openFiezelAuthModal(initialTab){
     }
 
     const html=`<div class="modal-mark">FIEZEL AUTH</div>
-      <h2>Akun FIEZEL</h2>
+      <h2>${FiezelI18n.t('account.card-title')}</h2>
       <div class="auth-tabs">
-        <button type="button" class="auth-tab ${currentTab==='login'?'active':''}" data-tab="login">Masuk</button>
-        <button type="button" class="auth-tab ${currentTab==='register'?'active':''}" data-tab="register">Daftar</button>
+        <button type="button" class="auth-tab ${currentTab==='login'?'active':''}" data-tab="login">${FiezelI18n.t('account.tab-masuk')}</button>
+        <button type="button" class="auth-tab ${currentTab==='register'?'active':''}" data-tab="register">${FiezelI18n.t('account.tab-daftar')}</button>
         <button type="button" class="auth-tab ${currentTab==='teacher'?'active':''}" data-tab="teacher">Guru</button>
       </div>
       <div id="authTabBody">${tabContent}</div>
       <div class="modal-actions" style="margin-top:16px">
-        <button type="button" id="btnAuthCancel">Batal</button>
+        <button type="button" id="btnAuthCancel">${FiezelI18n.t('account.batal')}</button>
       </div>`;
 
     openModal(html);
@@ -8170,7 +8170,7 @@ function openFiezelAuthModal(initialTab){
             const res=await self.FiezelAccount?.register?.({handle,password,confirmPassword});
             if(res?.ok){
               const h=res.account?.handle||self.FiezelAccount?.getAccount?.()?.handle||handle;
-              showToast(`Akun @${h} berhasil dibuat!`);
+              showToast(FiezelI18n.t('account.toast-dibuat',{handle:h}));
               closeModal();
               setTimeout(openSettings,100);
               return;
@@ -8184,7 +8184,7 @@ function openFiezelAuthModal(initialTab){
             const res=await self.FiezelAccount?.activateTeacher?.({code});
             if(res?.ok){
               const tName=res.account?.teacherName||'Guru';
-              showToast(`Akun Guru aktif! Selamat datang, ${tName}.`);
+              showToast(FiezelI18n.t('guru.toast-akun-aktif',{nama:tName}));
               try{
                 if(self.FiezelOnboarding?.markCompleted){
                   self.FiezelOnboarding.markCompleted(self,{at:Date.now(),via:'token',name:tName,role:'guru'});
@@ -8197,13 +8197,13 @@ function openFiezelAuthModal(initialTab){
               return;
             }
             if(errBox){
-              errBox.textContent=res?.message||'Aktivasi gagal.';
+              errBox.textContent=res?.message||FiezelI18n.t('guru.aktivasi-gagal');
               errBox.style.display='block';
             }
           }
         }catch(_){
           if(errBox){
-            errBox.textContent='Terjadi kesalahan. Silakan coba lagi.';
+            errBox.textContent=FiezelI18n.t('account.err-umum');
             errBox.style.display='block';
           }
         }finally{
@@ -8593,7 +8593,7 @@ ${scaleBrief}
 2. "ก้าวต่อไปหนึ่งก้าว:" - การแก้ไขที่ได้ผลที่สุดเพียงหนึ่งอย่าง พร้อมอธิบายว่าทำไมถึงเลือกข้อนี้
 3. "ก่อน / หลัง:" - ยกประโยคของนักเรียนมาหนึ่งประโยค แล้วเขียนเวอร์ชันที่ดีกว่า
 กฎเหล็ก: ห้ามพูดถึง band IELTS หรือคะแนน TOEFL และห้ามบอกว่านักเรียนพร้อมหรือไม่พร้อมสอบ คะแนนตามเกณฑ์นี้คือเครื่องมือฝึก ไม่ใช่การพยากรณ์คะแนนสอบ`:`Kamu penilai menulis Bahasa Inggris untuk murid Indonesia level ${prompt.level}. Bahasa jawaban: Indonesia santai tapi jelas, maksimal 220 kata.
-${exam?`Tugas ini berbentuk ${exam.label}. Batas kata ${exam.minWords}, waktu ${exam.minutes} menit. ${exam.note}`:'Tugas ini latihan fondasi, belum berbentuk soal ujian.'}
+${exam?FiezelI18n.t('tulis.tugas-ujian-brief',{label:exam.label,minWords:exam.minWords,minutes:exam.minutes,note:exam.note}):FiezelI18n.t('tulis.tugas-fondasi')}
 Topik: "${prompt.en}"
 Tulisan murid:
 """${text.slice(0,1800)}"""
@@ -11000,7 +11000,7 @@ function learningMetricsMarkup(){
       ' titik), '+probe.due+' jatuh tempo, '+probe.measured+' sudah terukur dari jawaban nyata'+
       probeBrier+probeFragile+'.</p>'
     : '<p class="muted">Probe retensi: belum ada lesson yang menembus gerbang mastery.</p>';
-  return card('<h3>Metrik Belajar <span class="muted">(bayangan — mengukur, tidak memutuskan)</span></h3>'+
+  return card('<h3>'+FiezelI18n.t('progress.metrik-belajar')+' <span class="muted">(bayangan — mengukur, tidak memutuskan)</span></h3>'+
     '<div class="diag-grid">'+
     cell('Learning gain',gain)+
     cell('Kalibrasi (Brier)',brier,'makin kecil makin jujur')+
@@ -11157,7 +11157,7 @@ function tutorCenterView(){
       <div class="card" style="padding:28px 20px;border-radius:var(--radius);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,0.06)">
         <div style="font-size:2.8rem;margin-bottom:12px">🔒</div>
         <div class="modal-mark">AKSES TERBATAS</div>
-        <h2 style="margin:8px 0 12px 0">Ruang Guru Memerlukan Kode Undangan</h2>
+        <h2 style="margin:8px 0 12px 0">${FiezelI18n.t('guru.gate-judul')}</h2>
         <p class="muted" style="margin-bottom:20px;line-height:1.5;font-size:0.95rem">
           Ruang Guru dan Tutor Action Center hanya dapat diakses oleh akun guru yang telah terverifikasi dengan kode undangan resmi dari Owner FIEZEL.
         </p>
@@ -11501,7 +11501,7 @@ function audioDiagnosticsText(){
   if(d.konteks==='running') return FiezelI18n.t('settings.aktif-kalau-tetap-sunyi-periksa');
   if(d.konteks===FiezelI18n.t('settings.belum-dibuat')) return FiezelI18n.t('settings.menunggu-sentuhan-pertama-ios-baru');
   if(d.konteks==='suspended') return FiezelI18n.t('settings.izin-audio-belum-terbuka-status');
-  return 'Status audio: '+d.konteks+'.';
+  return FiezelI18n.t('diag.status-audio',{konteks:d.konteks});
 }
 function refreshAudioDiagnostics(){
   try{
@@ -12252,7 +12252,7 @@ function studentRegistrationMarkup(){
 async function socialProfilMarkup(core){
   const settingsCard=card(`<div style="display:flex;align-items:center;justify-content:space-between">
     <div>
-      <h3 style="margin:0;font-size:15px;color:var(--text)">Pengaturan & Preferensi</h3>
+      <h3 style="margin:0;font-size:15px;color:var(--text)">${FiezelI18n.t('settings.online-pengaturan-judul')}</h3>
       <small style="color:var(--muted)">Kecepatan suara, notifikasi, tema, dan akun</small>
     </div>
     <button type="button" class="text-button" onclick="openSettings()" style="font-weight:700;color:var(--text);display:flex;align-items:center;gap:4px">Buka <i data-lucide="sliders-horizontal"></i></button>
@@ -13107,7 +13107,7 @@ function accountSheetMarkup(mode,message){
   const codeField=mode==='teacher'
     ? `<div class="field"><label for="accountCode">${FiezelI18n.t('account.label-code')}</label>
        <input id="accountCode" type="text" autocomplete="one-time-code" inputmode="text" spellcheck="false" placeholder="Kode 32 karakter">
-       <small class="field-msg">Nama dan lembaga terisi otomatis dari token.</small></div>`
+       <small class="field-msg">${FiezelI18n.t('guru.nama-lembaga-token')}</small></div>`
     : '';
   // Petunjuk sandi hanya ditampilkan di jalur yang MEMBUAT sandi. Menampilkannya saat masuk
   // memberi tahu penebak bentuk sandi yang sah, dan tidak menolong siapa pun yang sudah punya.
@@ -13178,7 +13178,7 @@ async function accountSubmit(){
     if(accountSheetMode==='teacher'||core.role()==='teacher'){
       try{localStorage.setItem('fz_teacher_mode','1')}catch(_){}
       const tName=res.account?.teacherName||'Guru';
-      showToast(`Akun Guru aktif! Selamat datang, ${tName}.`);
+      showToast(FiezelI18n.t('guru.toast-akun-aktif',{nama:tName}));
       state.preferences={...state.preferences,role:'guru'};
       state.view='tutor';
       try{save()}catch(_){}

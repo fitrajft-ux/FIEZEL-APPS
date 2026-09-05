@@ -13,6 +13,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  /* m025-265 · sapuan kebocoran Thai: naskah modul ini dulu literal Indonesia, jadi murid
+     yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft — kalau copy-map
+     belum termuat (murid th memuat copy-th secara dinamis), fallback id-lah yang tampil. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
+
   var root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
   var KEY = 'fiezel-duel-v1';
   var SECONDS = 15, COUNT = 8;
@@ -135,11 +140,11 @@
     if (st.screen === 'play' && g && !g.feedback) startTimer(); else stopTimer();
     if (env.afterRender) try { env.afterRender(); } catch (_) {}
   }
-  function nameField() { return '<label class="duel-name">Nama panggilanmu<input type="text" maxlength="20" value="' + esc(st.name) + '" placeholder="mis. Rani" data-duel-name data-testid="duel-name"></label>'; }
+  function nameField() { return '<label class="duel-name">' + t('duel.nama-panggilan', 'Nama panggilanmu') + '<input type="text" maxlength="20" value="' + esc(st.name) + '" placeholder="mis. Rani" data-duel-name data-testid="duel-name"></label>'; }
   function homeView() {
     var keys = Object.keys(st.challenges).sort(function (a, b) { return st.challenges[b].at - st.challenges[a].at; }).slice(0, 5);
-    return '<div class="lf-card duel-hero"><p class="lf-kicker">Duel Belajar</p><h2>Main bersama teman</h2><p class="lf-muted">8 soal · 15 detik per soal · poin untuk jawaban tepat, bonus untuk cepat dan beruntun. Soal yang salah tetap dijelaskan polanya — jadi kalah pun tetap belajar.</p>' + nameField() +
-      '<div class="duel-modes">' + Object.keys(MODES).map(function (m) { return '<button type="button" class="duel-mode" data-duel="start" data-mode="' + m + '" data-testid="duel-start-' + m + '"><b>' + MODES[m].label + '</b><small>Buat tantangan</small></button>'; }).join('') + '</div>' +
+    return '<div class="lf-card duel-hero"><p class="lf-kicker">' + t('duel.judul', 'Duel Belajar') + '</p><h2>Main bersama teman</h2><p class="lf-muted">8 soal · 15 detik per soal · poin untuk jawaban tepat, bonus untuk cepat dan beruntun. Soal yang salah tetap dijelaskan polanya — jadi kalah pun tetap belajar.</p>' + nameField() +
+      '<div class="duel-modes">' + Object.keys(MODES).map(function (m) { return '<button type="button" class="duel-mode" data-duel="start" data-mode="' + m + '" data-testid="duel-start-' + m + '"><b>' + MODES[m].label + '</b><small>' + t('duel.buat-tantangan', 'Buat tantangan') + '</small></button>'; }).join('') + '</div>' +
       '<div class="lf-actions"><button type="button" class="lf-ghost" data-duel="to-join" data-testid="duel-to-join">Punya kode/link teman?</button><button type="button" class="lf-ghost" data-duel="to-hot" data-testid="duel-to-hot">Main berdua di satu HP</button></div></div>' +
       (keys.length ? '<div class="lf-card"><h3>Papan skor tantanganmu</h3><ul class="duel-board">' + keys.map(function (k) { var c = st.challenges[k]; var rows = c.scores.slice().sort(function (a, b) { return b.score - a.score; }); return '<li><div class="duel-board-head"><b>' + esc(MODES[c.mode].label) + ' · #' + c.seed + '</b><small>' + rows.length + ' pemain</small></div><ol>' + rows.map(function (r, i) { return '<li' + (r.me ? ' class="is-me"' : '') + '><span>' + (i + 1) + '.</span> ' + esc(r.name) + ' <em>' + r.score + ' poin · ' + r.correct + '/' + COUNT + '</em></li>'; }).join('') + '</ol><div class="lf-actions"><button type="button" class="lf-mini" data-duel="share" data-key="' + esc(k) + '" data-testid="duel-share-' + esc(k) + '">Undang lagi</button><button type="button" class="lf-mini" data-duel="to-join">Tempel kode balasan</button></div></li>'; }).join('') + '</ul></div>' : '');
   }
@@ -149,13 +154,13 @@
       '<textarea class="lf-code duel-code" rows="3" placeholder="Tempel kode / link ?duel=… di sini" data-duel-code data-testid="duel-code-input">' + esc(st.code) + '</textarea>' +
       (st.code && !parsed ? '<div class="lf-feedback is-wrong">Kode belum dikenali — pastikan tersalin utuh.</div>' : '') +
       (parsed ? '<div class="duel-invite" data-testid="duel-invite-preview"><b>' + esc(parsed.from || 'Teman') + '</b> ' + (parsed.reply ? 'membalas tantanganmu' : 'menantangmu') + ' · ' + esc((MODES[parsed.mode] || MODES.mix).label) + ' · skor ' + parsed.score + ' poin (' + parsed.correct + '/' + COUNT + ')</div>' : '') +
-      '<div class="lf-actions">' + (parsed && !parsed.reply ? '<button type="button" class="lf-primary" data-duel="accept" data-testid="duel-accept">Terima & main soal yang sama</button>' : '') + (parsed && parsed.reply ? '<button type="button" class="lf-primary" data-duel="record-reply" data-testid="duel-record-reply">Catat ke papan skor</button>' : '') + '<button type="button" class="lf-ghost" data-duel="home">Kembali</button></div></div>';
+      '<div class="lf-actions">' + (parsed && !parsed.reply ? '<button type="button" class="lf-primary" data-duel="accept" data-testid="duel-accept">Terima & main soal yang sama</button>' : '') + (parsed && parsed.reply ? '<button type="button" class="lf-primary" data-duel="record-reply" data-testid="duel-record-reply">Catat ke papan skor</button>' : '') + '<button type="button" class="lf-ghost" data-duel="home">' + t('umum.kembali', 'Kembali') + '</button></div></div>';
   }
   function hotSetupView() {
     return '<div class="lf-card"><p class="lf-kicker">Satu HP, dua pemain</p><h2>Main berdua</h2><p class="lf-muted">Kalian bergantian menjawab soal yang sama. Yang lebih cepat dan tepat menang.</p>' +
       '<div class="tac-row"><label class="duel-name">Pemain 1<input type="text" maxlength="20" value="' + esc(st.name || '') + '" data-duel-p="0" data-testid="duel-p1"></label><label class="duel-name">Pemain 2<input type="text" maxlength="20" placeholder="Nama teman" data-duel-p="1" data-testid="duel-p2"></label></div>' +
       '<div class="duel-modes">' + Object.keys(MODES).map(function (m) { return '<button type="button" class="duel-mode" data-duel="start-hot" data-mode="' + m + '" data-testid="duel-hot-' + m + '"><b>' + MODES[m].label + '</b><small>Mulai berdua</small></button>'; }).join('') + '</div>' +
-      '<div class="lf-actions"><button type="button" class="lf-ghost" data-duel="home">Kembali</button></div></div>';
+      '<div class="lf-actions"><button type="button" class="lf-ghost" data-duel="home">' + t('umum.kembali', 'Kembali') + '</button></div></div>';
   }
   function playView() {
     var g = st.game, B = bank(), item = B.byId(g.ids[g.index]), fb = g.feedback;
@@ -165,9 +170,9 @@
     if (item.contextKind === 'picture') ctx = '<div class="lf-picture" role="img" aria-label="Gambar: ' + esc(item.pictureAlt) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + item.picture + '</svg></div>';
     else if (item.context) ctx = '<div class="lf-context"><div class="lf-context-head"><span>' + (item.contextKind === 'dialogue' ? 'Dialog pendek' : 'Teks pendek') + '</span></div><pre class="lf-transcript">' + esc(item.context) + '</pre></div>';
     return '<div class="lf-card duel-play" data-testid="duel-play"><div class="duel-top"><div class="duel-scores">' + score + '</div><div class="duel-timer" data-duel-timer style="--p:' + (g.left / (SECONDS * 1000) * 100) + '%"><i></i><b data-duel-secs>' + Math.ceil(g.left / 1000) + '</b></div></div>' +
-      '<div class="lf-q-meta"><span class="lf-chip">' + esc(B.AREAS[B.SKILLS[item.skill].area]) + '</span><span class="lf-muted">Soal ' + (g.index + 1) + ' / ' + g.ids.length + (who ? ' · giliran <b>' + esc(who.name) + '</b>' : '') + '</span></div>' + ctx +
+      '<div class="lf-q-meta"><span class="lf-chip">' + esc(B.AREAS[B.SKILLS[item.skill].area]) + '</span><span class="lf-muted">' + t('duel.soal-progress', 'Soal {n}').replace('{n}', g.index + 1) + ' / ' + g.ids.length + (who ? ' · giliran <b>' + esc(who.name) + '</b>' : '') + '</span></div>' + ctx +
       '<p class="lf-prompt">' + esc(item.prompt) + '</p><div class="lf-options">' + item.options.map(function (op, i) { var cls = 'lf-option'; if (fb && i === item.answer) cls += ' is-correct'; if (fb && !fb.correct && i === g.chosen) cls += ' is-wrong'; return '<button type="button" class="' + cls + '" data-duel="answer" data-choice="' + i + '" data-testid="duel-option-' + i + '"' + (fb ? ' disabled' : '') + '>' + esc(op) + '</button>'; }).join('') + '</div>' +
-      (fb ? '<div class="lf-feedback ' + (fb.correct ? 'is-correct' : 'is-wrong') + '" data-testid="duel-feedback"><b>' + (fb.correct ? '+' + fb.pts + ' poin' : '+0') + '</b> · ' + esc(fb.text) + '</div><div class="lf-actions"><button type="button" class="lf-primary" data-duel="next" data-testid="duel-next">' + (g.index + 1 >= g.ids.length && (!g.players || g.turn === 1) ? 'Lihat hasil' : 'Lanjut') + '</button></div>' : '') +
+      (fb ? '<div class="lf-feedback ' + (fb.correct ? 'is-correct' : 'is-wrong') + '" data-testid="duel-feedback"><b>' + (fb.correct ? '+' + fb.pts + ' poin' : '+0') + '</b> · ' + esc(fb.text) + '</div><div class="lf-actions"><button type="button" class="lf-primary" data-duel="next" data-testid="duel-next">' + (g.index + 1 >= g.ids.length && (!g.players || g.turn === 1) ? 'Lihat hasil' : t('umum.lanjut', 'Lanjut')) + '</button></div>' : '') +
       '<div class="lf-actions lf-actions-end"><button type="button" class="lf-ghost" data-duel="quit">Keluar</button></div></div>';
   }
   function resultView() {
@@ -221,7 +226,7 @@
         st.code = ''; st.screen = 'home'; toast('Skor ' + (rep.from || 'teman') + ' dicatat ke papan.'); break;
       }
       case 'copy-code': { var ta = mountEl.querySelector('[data-testid=duel-my-code]'); if (ta) copy(ta.value, g && g.from ? 'Kode balasan tersalin — kirim ke ' + g.from + '.' : 'Link undangan tersalin.'); return; }
-      case 'share-now': { var ta2 = mountEl.querySelector('[data-testid=duel-my-code]'); try { navigator.share({ title: 'Duel Belajar FIEZEL', text: (st.name || 'Aku') + ' menantangmu di FIEZEL!', url: ta2 && ta2.value.indexOf('http') === 0 ? ta2.value : undefined }); } catch (_) {} return; }
+      case 'share-now': { var ta2 = mountEl.querySelector('[data-testid=duel-my-code]'); try { navigator.share({ title: t('duel.judul-share', 'Duel Belajar FIEZEL'), text: (st.name || 'Aku') + ' menantangmu di FIEZEL!', url: ta2 && ta2.value.indexOf('http') === 0 ? ta2.value : undefined }); } catch (_) {} return; }
       case 'share': { var c2 = st.challenges[btn.getAttribute('data-key')]; if (!c2) return; var me = c2.scores.filter(function (s) { return s.me; })[0] || { score: 0, correct: 0 }; copy(shareLink(encode({ v: 1, seed: c2.seed, mode: c2.mode, from: (st.name || 'Teman').slice(0, 20), score: me.score, correct: me.correct })), 'Link undangan tersalin.'); return; }
       case 'replay': st.game = newGame({ mode: g ? g.mode : 'mix', players: g && g.players ? g.players.map(function (p) { return { name: p.name, score: 0, correct: 0, streak: 0 }; }) : null }); st.screen = 'play'; break;
       default: return;

@@ -235,6 +235,7 @@ jobs:
           node tests/social-schema-contract-test.js
           node tests/social-invite-link-test.js
           node tests/student-single-registration-test.js
+          node tests/th-ui-leak-test.js
           # Lapis AKUN sisi murid (masuk/daftar/aktivasi guru). Ditempatkan tepat sesudah
           # gerbang sosial karena keduanya memakai lane transport yang sama (panggilan
           # langsung ke Worker dengan cookie fz_id), dan cacat di lane itu akan memerahkan

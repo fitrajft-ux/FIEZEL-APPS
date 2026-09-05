@@ -10,15 +10,20 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  /* m025-265 · sapuan kebocoran Thai: naskah di berkas ini dulu literal Indonesia,
+     jadi murid yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft:
+     kalau copy-map belum termuat, fallback id-lah yang tampil. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
+
   var SCHEMA = 'fiezel-progress-export-v1';
   var PREFIX = 'fiezel';
 
   var GROUPS = [
     { id: 'core', test: function (k) { return /^fiezel-state/.test(k) || k === 'fiezel-legacy-state-owner'; }, label: 'Progres belajar utama', desc: 'Riwayat jawaban, level aktif, streak, sesi, dan preferensi belajar.' },
     { id: 'learner', test: function (k) { return /^fiezel-learner-/.test(k); }, label: 'Alur belajar (diagnostic, rencana, lesson)', desc: 'Tujuan belajar, hasil 5 soal diagnostic, rencana hari ini, dan lesson yang selesai.' },
-    { id: 'tutor', test: function (k) { return /^fiezel-tutor-center/.test(k); }, label: 'Tutor Action Center', desc: 'Kelas, daftar murid (nama depan), pola kesalahan, dan sesi review yang dikirim.' },
+    { id: 'tutor', test: function (k) { return /^fiezel-tutor-center/.test(k); }, label: 'Tutor Action Center', desc: t('backup.grup-tutor-desc', 'Kelas, daftar murid (nama depan), pola kesalahan, dan sesi review yang dikirim.') },
     { id: 'brain', test: function (k) { return /^fiezel-(bkt|confusion|misconception|retention|brain|item-calibration|olm|srl|sl-v1|daily|continuity|evidence|policy|social)/.test(k); }, label: 'Buku besar adaptif', desc: 'Estimasi penguasaan per skill, pola miskonsepsi, dan jadwal review.' },
-    { id: 'prefs', test: function () { return true; }, label: 'Pengaturan perangkat', desc: 'Bahasa, suara, pengingat, dan penanda onboarding.' }
+    { id: 'prefs', test: function () { return true; }, label: t('backup.grup-prefs-label', 'Pengaturan perangkat'), desc: 'Bahasa, suara, pengingat, dan penanda onboarding.' }
   ];
 
   function keys(storage) {
