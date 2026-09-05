@@ -399,7 +399,33 @@
     return map[skill] || '';
   }
 
+  /*
+   * Markup gambar soal — SATU sumber untuk semua yang menampilkan soal dari bank ini.
+   *
+   * Soal `contextKind: 'picture'` menaruh pertanyaannya SEPENUHNYA pada gambar ("Kata
+   * Inggris apa yang cocok untuk gambar ini?"). Tanpa gambarnya, soal itu bukan sekadar
+   * kurang cantik — ia MUSTAHIL dijawab, dan murid hanya bisa menebak.
+   *
+   * Bank ini punya tiga penampil: latihan mandiri (fiezel-learner-flow.js), duel
+   * (fiezel-duel.js), dan runner kelas (features/class-hub/). Selama markupnya disalin ke
+   * masing-masing, penampil KEEMPAT akan lahir tanpa gambar juga — persis yang terjadi pada
+   * runner kelas, yang mencetak item.context tetapi tidak pernah menyebut item.picture sama
+   * sekali, sehingga setiap soal gambar dalam tugas guru sampai ke murid sebagai pertanyaan
+   * tanpa gambar. Siapa pun yang menampilkan soal bank ini memanggil fungsi ini, bukan
+   * menyalin tag <svg>-nya.
+   */
+  function pictureHtml(item, cls) {
+    if (!item || item.contextKind !== 'picture' || !item.picture) return '';
+    var alt = String(item.pictureAlt == null ? '' : item.pictureAlt)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return '<div class="' + (cls || 'lf-picture') + '" role="img" aria-label="Gambar: ' + alt +
+      '" data-testid="bank-picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      item.picture + '</svg></div>';
+  }
+
   return {
+    pictureHtml: pictureHtml,
     AREAS: AREAS, SKILLS: SKILLS, SKILL_ORDER: SKILL_ORDER, ITEMS: ITEMS,
     itemsFor: itemsFor, byId: byId, pick: pick, pickFresh: pickFresh, variant: variant, generated: generated, picItem: picItem, PIC: PIC,
     diagnosticSet: diagnosticSet, explain: explain, buildSession: buildSession, afterSessionNote: afterSessionNote

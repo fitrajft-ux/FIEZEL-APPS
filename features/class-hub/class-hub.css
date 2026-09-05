@@ -77,3 +77,8 @@
    dari render()). Saat cat ulang itu hanya membawa data baru, animasi masuknya tidak boleh
    diputar lagi - lihat .tg.is-repaint di features/teacher/teacher-shell.css. */
 .tg.is-repaint .ch-body,.tg.is-repaint .ch-feedback,.tg.is-repaint .ch-expand{animation:none}
+
+/* Gambar soal di runner kelas. Sepadan dengan .lf-picture di learner-flow: soal bergambar
+   memakai bank dan markup yang sama, jadi ukurannya pun harus terbaca sama oleh murid. */
+.ch-picture{display:grid;place-items:center;width:150px;height:150px;margin:6px auto 14px;border-radius:16px;background:var(--yellow-soft,#FDF3D3);color:var(--ink,#3A2E22)}
+.ch-picture svg{width:96px;height:96px}
