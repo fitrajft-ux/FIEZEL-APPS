@@ -9,6 +9,11 @@
 (function (root) {
   'use strict';
 
+  /* m025-265 · sapuan kebocoran Thai: naskah di berkas ini dulu literal Indonesia,
+     jadi murid yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft:
+     kalau copy-map belum termuat, fallback id-lah yang tampil. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
+
   var KEY = 'fiezel-inbox-v1';
   var MAX = 60;
   var RETENTION_MS = 30 * 86400000;
@@ -83,7 +88,7 @@
 
   function text(e) {
     if (!e) return '';
-    if (e.kind === 'teacher_assignment') return (e.mode === 'ujian' ? 'Ujian mini' : 'Tugas') + ' baru dari ' + (e.from || 'guru') + ': “' + (e.title || 'Tugas') + '”';
+    if (e.kind === 'teacher_assignment') return (e.mode === 'ujian' ? t('notif.ujian-mini-label', 'Ujian mini') : t('notif.tugas-baru-label', 'Tugas')) + ' baru dari ' + (e.from || 'guru') + ': “' + (e.title || 'Tugas') + '”';
     return e.text || '';
   }
 

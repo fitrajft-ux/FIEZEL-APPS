@@ -128,7 +128,7 @@
     {
       "name": "C7[POST /api/ai/task] penghitung ai_account_day benar-benar bergerak",
       "status": "PASS",
-      "details": "[{\"day\":\"2026-09-05\",\"neurons\":60,\"requests\":1,\"touched_at\":1788637493540}]"
+      "details": "[{\"day\":\"2026-09-05\",\"neurons\":60,\"requests\":1,\"touched_at\":1788644878067}]"
     },
     {
       "name": "C5[POST /api/tts/render] perilaku model cocok dengan deklarasi fixture",
@@ -143,7 +143,7 @@
     {
       "name": "C7[POST /api/tts/render] penghitung ai_account_day benar-benar bergerak",
       "status": "PASS",
-      "details": "[{\"day\":\"2026-09-05\",\"neurons\":33,\"requests\":1,\"touched_at\":1788637493560}]"
+      "details": "[{\"day\":\"2026-09-05\",\"neurons\":33,\"requests\":1,\"touched_at\":1788644878082}]"
     },
     {
       "name": "C5[GET /api/tts/manifest] perilaku model cocok dengan deklarasi fixture",
@@ -258,7 +258,7 @@
     {
       "name": "H1. Panggilan model yang GAGAL melepas reservasinya kembali",
       "status": "PASS",
-      "details": "releaseSql=true row={\"day\":\"2026-09-05\",\"neurons\":0,\"requests\":0,\"touched_at\":1788637493582}"
+      "details": "releaseSql=true row={\"day\":\"2026-09-05\",\"neurons\":0,\"requests\":0,\"touched_at\":1788644878111}"
     },
     {
       "name": "H2. Amplopnya melaporkan pelepasan itu, dan murid tetap dilayani 200",
@@ -268,7 +268,7 @@
     {
       "name": "H3. TIMEOUT tidak melepas neuron (model sudah bekerja, biayanya nyata)",
       "status": "PASS",
-      "details": "released=false row={\"day\":\"2026-09-05\",\"neurons\":60,\"requests\":1,\"touched_at\":1788637493588}"
+      "details": "released=false row={\"day\":\"2026-09-05\",\"neurons\":60,\"requests\":1,\"touched_at\":1788644878123}"
     },
     {
       "name": "H4. Keputusan boleh-dilepas tinggal di SATU tempat (releasableFailure)",

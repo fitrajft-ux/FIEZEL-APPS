@@ -185,7 +185,7 @@
     writing: ['Tulis dulu apa adanya, rapihnya belakangan.', 'Dikit tapi jadi, lebih baik daripada panjang tapi ga selesai.'],
     skills: ['Speaking sama Listening paling cepat naik kalau rutin.', 'Lima menit di sini udah kehitung, kok.'],
     library: ['Cerita pendek dulu aja, biar ga kebanyakan mikir.', T('coach.tap-kalimatnya-if-mau-lihat')],
-    classroom: ['Materi ini ada subtitle Indonesianya, tenang.', T('coach.choose-topik-yg-paling-bikin')],
+    classroom: [T('coach.classroom-subtitle-id'), T('coach.choose-topik-yg-paling-bikin')],
     progress: ['Ini peta kemampuanmu — bukan rapor.', T('coach.yg-merah-bukan-aib-that')],
     test: ['Jawab apa adanya, ini buat ngukur, bukan buat nilai.', 'Ga usah tegang, ga ada yang lihat.']
   };

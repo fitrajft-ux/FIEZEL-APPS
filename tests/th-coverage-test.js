@@ -88,8 +88,52 @@ function nilaiThTercakup(thValue, idValue) {
 
 /* ===================================== 1 · COPY-MAP ====================================== */
 
-// Daftar domain FINAL Wave 2 (W2-INT §1) — pasangan copy-id/copy-th 1:1 per berkas.
-const DOMAINS = ['core', 'app-a', 'app-b', 'app-c', 'app-d', 'app-e', 'app-f', 'feat-a', 'feat-b', 'feat-c', 'feat-d', 'gems', 'quota', 'settings-locale', 'grammar-labels'];
+/*
+ * PENDAFTARAN DOMAIN OTOMATIS — jangan kembalikan ke daftar yang diketik tangan.
+ *
+ * Dulu di sini berdiri array 15 nama hasil ketikan (W2-INT §1). Array itu memeriksa dengan
+ * ketat apa yang TERCANTUM di dalamnya, dan sama sekali BUTA terhadap yang tidak. Domain
+ * baru karena itu lolos hijau tanpa pernah menyentuh Thai — kecuali penulisnya ingat
+ * menyunting array ini, dan tidak ada apa pun yang memaksanya ingat.
+ *
+ * Itu bukan kekhawatiran teoretis: `copy-id-redesign.js` (76 kunci: navigasi 4 tab, Home
+ * "Hari ini", ringkasan akhir sesi, tema malam, keadaan gagal audio) lahir di m025-246,
+ * dimuat di produksi lewat index.html, tidak pernah punya kembaran th, dan tidak pernah
+ * masuk array ini. Gerbang cakupan Thai tetap hijau selama berbulan-bulan sementara murid
+ * Thai membaca 76 kalimat itu dalam bahasa Indonesia — persis "kolase tiga bahasa" yang
+ * gerbang ini dibangun untuk mencegahnya.
+ *
+ * Sekarang daftarnya DITEMUKAN dari isi direktori. Berkas `copy-id-<domain>.js` baru
+ * otomatis menuntut `copy-th-<domain>.js`, dan sebaliknya. Tidak ada yang perlu diingat.
+ */
+const DOMAINS = [...new Set(fs.readdirSync(path.join(ROOT, 'features', 'i18n'))
+  .map((f) => (f.match(/^copy-(?:id|th)-(.+)\.js$/) || [])[1])
+  .filter(Boolean))].sort();
+
+/*
+ * UTANG YANG SUDAH ADA SEBELUM pendaftaran otomatis dinyalakan, dengan tanggal dan alasan.
+ *
+ * Isi daftar ini BUKAN pengecualian permanen dan bukan tempat menaruh pekerjaan baru: ia
+ * catatan lubang yang sudah terlanjur ada saat pagar dipasang, supaya pagarnya bisa berdiri
+ * hari ini tanpa menyandera perbaikannya. Menambah nama baru ke sini = memilih mengirim
+ * layar berbahasa campur ke murid Thai. Jangan. Tulis copy-th-nya.
+ *
+ * Setiap nama di sini WAJIB punya alasan dan tanggal, dan hilang begitu terjemahannya ada.
+ */
+const UTANG_TANPA_TH = new Map([
+  ['redesign', { sejak: '2026-09-05', kunci: 76, catatan: 'm025-246 gelombang penyederhanaan pengalaman; terjemahan th menunggu peninjauan penutur Thai' }]
+]);
+
+/*
+ * Utang PER-KUNCI: domain yang kembarannya ADA tetapi beberapa kunci th-nya belum ditulis.
+ * Ditemukan oleh pendaftaran otomatis yang sama — domain `student` tidak pernah terukur
+ * sebelumnya karena ia mendaftar lewat overrideCopy, pintu yang dulu tidak disediakan stub.
+ * Aturannya identik dengan UTANG_TANPA_TH: bukan tempat pekerjaan baru, wajib bertanggal,
+ * dan hilang begitu kuncinya ditulis.
+ */
+const UTANG_KUNCI = new Map([
+  ['student', { sejak: '2026-09-05', kunci: new Set(['grammar.materi-new-memiliki-item-valid', 'fsl.exam-format-kicker']), catatan: 'terjemahan th menunggu peninjauan penutur Thai' }]
+]);
 // th-only yang SAH (W2-INT §3): padanan id kedua kunci ini adalah fungsi perakit
 // (chipAria/streakToast) di gems-core.js — mendaftarkannya di copy-id = kalimat id BARU
 // di mata gerbang emas. Selain dua ini, kunci th tanpa pasangan id = lubang kontrak.
@@ -105,8 +149,17 @@ const TH_ONLY_SAH = new Set(['gems.chip-aria', 'gems.streak-toast']);
  */
 function muatCopyMap(relPath) {
   const tangkapan = [];
+  /*
+   * DUA pintu masuk, bukan satu. Sebagian domain mendaftar lewat registerCopy (kunci baru),
+   * sebagian lagi lewat overrideCopy (menimpa kalimat yang sudah ada) — copy-*-student.js
+   * memakai yang kedua, dan MENYERAH lebih awal bila overrideCopy tidak ada. Selama stub ini
+   * hanya menyediakan registerCopy, domain student memuat nol kunci dan lolos tanpa diukur;
+   * daftar domain yang diketik tangan menyembunyikannya karena 'student' memang tidak
+   * tercantum di sana. Stub wajib menyediakan setiap pintu yang dipakai berkas copy.
+   */
   const stub = {
     registerCopy: (locale, map) => { tangkapan.push([String(locale), map || {}]); },
+    overrideCopy: (locale, map) => { tangkapan.push([String(locale), map || {}]); },
     t: (k) => String(k),
     getLocale: () => 'id'
   };
@@ -117,11 +170,32 @@ function muatCopyMap(relPath) {
   return tangkapan;
 }
 
+check('copy: ada domain yang ditemukan di features/i18n', DOMAINS.length > 0, DOMAINS.length + ' domain: ' + DOMAINS.join(', '));
+
+/* Utang yang sudah lunas harus DICORET dari daftarnya, bukan dibiarkan menumpuk sebagai
+   pengecualian mati yang diam-diam melonggarkan gerbang untuk domain lain kelak. */
+for (const [domain, info] of UTANG_TANPA_TH) {
+  const adaTh = fs.existsSync(path.join(ROOT, 'features', 'i18n', 'copy-th-' + domain + '.js'));
+  check('copy ' + domain + ': masih terdaftar sebagai utang, jadi copy-th-nya memang belum ada',
+    !adaTh, adaTh ? 'copy-th-' + domain + '.js SUDAH ada — hapus "' + domain + '" dari UTANG_TANPA_TH' : 'utang sejak ' + info.sejak);
+}
+
 for (const domain of DOMAINS) {
   const idPath = 'features/i18n/copy-id-' + domain + '.js';
   const thPath = 'features/i18n/copy-th-' + domain + '.js';
-  check('copy ' + domain + ': kedua berkas ada', fs.existsSync(path.join(ROOT, idPath)) && fs.existsSync(path.join(ROOT, thPath)));
-  if (!fs.existsSync(path.join(ROOT, idPath)) || !fs.existsSync(path.join(ROOT, thPath))) continue;
+  const adaId = fs.existsSync(path.join(ROOT, idPath));
+  const adaTh = fs.existsSync(path.join(ROOT, thPath));
+  const utang = UTANG_TANPA_TH.get(domain);
+  if (utang && adaId && !adaTh) {
+    /* Lubang yang SUDAH tercatat: dilaporkan tiap jalan supaya tidak pernah hilang dari
+       pandangan, tetapi tidak memerahkan gerbang — pagar untuk domain lain tetap berdiri. */
+    console.log('UTANG copy ' + domain + ': tanpa copy-th (' + utang.kunci + ' kunci, sejak ' +
+      utang.sejak + ') — ' + utang.catatan);
+    continue;
+  }
+  check('copy ' + domain + ': kedua berkas ada (id DAN th)', adaId && adaTh,
+    (adaId ? '' : 'copy-id-' + domain + '.js hilang; ') + (adaTh ? '' : 'copy-th-' + domain + '.js hilang'));
+  if (!adaId || !adaTh) continue;
 
   const idReg = muatCopyMap(idPath);
   const thReg = muatCopyMap(thPath);
@@ -135,9 +209,22 @@ for (const domain of DOMAINS) {
   const kunciId = Object.keys(idMap);
   const kunciTh = Object.keys(thMap);
 
-  const hilang = kunciId.filter((k) => !(k in thMap));
+  const semuaHilang = kunciId.filter((k) => !(k in thMap));
+  const utangKunci = UTANG_KUNCI.get(domain);
+  const dimaafkan = semuaHilang.filter((k) => utangKunci && utangKunci.kunci.has(k));
+  const hilang = semuaHilang.filter((k) => !dimaafkan.includes(k));
+  if (dimaafkan.length) {
+    console.log('UTANG copy ' + domain + ': ' + dimaafkan.length + ' kunci tanpa th (sejak ' +
+      utangKunci.sejak + ') — ' + dimaafkan.join(', ') + ' — ' + utangKunci.catatan);
+  }
   check('copy ' + domain + ': paritas kunci id→th 0 selisih (' + kunciId.length + ' kunci id)',
     hilang.length === 0, hilang.length + ' kunci id tanpa padanan th: ' + hilang.slice(0, 8).join(', '));
+  /* Utang yang sudah lunas wajib dicoret, sama seperti UTANG_TANPA_TH. */
+  if (utangKunci) {
+    const lunas = [...utangKunci.kunci].filter((k) => k in thMap);
+    check('copy ' + domain + ': daftar UTANG_KUNCI tidak memuat kunci yang sudah diterjemahkan',
+      lunas.length === 0, lunas.length ? 'sudah ada di th, hapus dari UTANG_KUNCI: ' + lunas.join(', ') : 'bersih');
+  }
 
   const liar = kunciTh.filter((k) => !(k in idMap) && !TH_ONLY_SAH.has(k));
   check('copy ' + domain + ': tanpa kunci th liar di luar 2 th-only gems yang sah',

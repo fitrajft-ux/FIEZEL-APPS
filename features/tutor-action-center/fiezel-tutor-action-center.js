@@ -11,6 +11,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  /* m025-265 · sapuan kebocoran Thai: naskah modul ini dulu literal Indonesia, jadi murid
+     yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft: kalau copy-map
+     belum termuat, fallback id yang tampil — bukan kunci mentah. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
+
   var root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
   var KEY = 'fiezel-tutor-center-v1';
   var ASSIGN_KEY = 'fiezel-learner-assignments-v1';
@@ -85,7 +90,7 @@
     return out;
   }
   function meaningFor(area, acc) {
-    if (acc == null) return 'Belum ada bukti — belum diukur.';
+    if (acc == null) return t('tac.belum-ada-bukti', 'Belum ada bukti — belum diukur.');
     if (acc >= 0.75) return 'Stabil untuk level ini; cukup dijaga lewat review ringan.';
     if (acc >= 0.6) return 'Sedang berkembang; butuh latihan terarah pada pola yang tertukar.';
     return 'Perlu review; ini prioritas minggu ini.';
@@ -119,13 +124,13 @@
     if (pq.length >= 3) q.push({ id: 'iq-pq', count: pq.length, title: pq.length + ' murid sering salah menggunakan “did + verb”', names: pq.map(function (s) { return s.name; }), action: 'Berikan mini lesson Past Questions', minutes: 10, followUp: 'Latihan lanjutan: 5 soal', skills: ['past_questions'] });
     if (pt.length >= 3) q.push({ id: 'iq-pt', count: pt.length, title: pt.length + ' dari ' + cls.students.length + ' murid masih salah pada past tense', names: pt.map(function (s) { return s.name; }), action: 'Mini lesson Past Simple + 10 soal review', minutes: 12, followUp: 'Target: membedakan verb 1 dan verb 2 saat ada penanda waktu', skills: ['past_tense', 'past_questions'] });
     var unfinished = cls.students.filter(function (s) { return s.listening && s.listening.opened > s.listening.completed; });
-    if (unfinished.length) q.push({ id: 'iq-ls', count: unfinished.length, title: unfinished.length + ' murid membuka listening, tetapi tidak menyelesaikannya', names: unfinished.map(function (s) { return s.name; }), action: 'Kirim sesi listening pendek', minutes: 6, followUp: 'Aktifkan transcript setelah percobaan pertama', skills: ['listening_detail'] });
+    if (unfinished.length) q.push({ id: 'iq-ls', count: unfinished.length, title: unfinished.length + ' murid membuka listening, tetapi tidak menyelesaikannya', names: unfinished.map(function (s) { return s.name; }), action: t('tac.kirim-listening', 'Kirim sesi listening pendek'), minutes: 6, followUp: t('tac.aktifkan-transcript', 'Aktifkan transcript setelah percobaan pertama'), skills: ['listening_detail'] });
     var ld = weakStudents(cls, 'listening_detail', 0.6);
     if (ld.length >= 3) q.push({ id: 'iq-ld', count: ld.length, title: ld.length + ' murid belum stabil menangkap detail dialog', names: ld.map(function (s) { return s.name; }), action: 'Sesi listening detail 5 soal', minutes: 6, followUp: 'Fokus kata kunci setelah pertanyaan (waktu, jumlah, tempat)', skills: ['listening_detail'] });
     var ri = weakStudents(cls, 'reading_inference', 0.6);
     if (ri.length >= 3) q.push({ id: 'iq-ri', count: ri.length, title: ri.length + ' murid memilih jawaban literal pada soal inference', names: ri.map(function (s) { return s.name; }), action: 'Review Reading inference 5 soal', minutes: 7, followUp: 'Minta murid menyebut petunjuk teks sebelum menjawab', skills: ['reading_inference'] });
     var away = inactiveStudents(cls, now);
-    if (away.length) q.push({ id: 'iq-away', count: away.length, title: away.length + ' murid belum kembali belajar lebih dari 5 hari', names: away.map(function (s) { return s.name; }), action: 'Kirim pengingat suportif + satu sesi 5 menit', minutes: 5, followUp: 'Mulai dari skill yang sudah cukup kuat agar percaya diri kembali', skills: ['vocab_a2'] });
+    if (away.length) q.push({ id: 'iq-away', count: away.length, title: away.length + ' murid belum kembali belajar lebih dari 5 hari', names: away.map(function (s) { return s.name; }), action: t('tac.kirim-pengingat', 'Kirim pengingat suportif + satu sesi 5 menit'), minutes: 5, followUp: 'Mulai dari skill yang sudah cukup kuat agar percaya diri kembali', skills: ['vocab_a2'] });
     return q;
   }
 
@@ -184,7 +189,7 @@
       'Laporan Minggu ' + r.week + ' — ' + (anonymous ? 'Kelas ' + cls.level : cls.name),
       r.registered + ' murid terdaftar · ' + r.active + ' murid aktif · ' + r.targetDone + ' murid menyelesaikan target',
       'Skill prioritas: ' + r.priority.join(', ').toLowerCase() + ' · ' + r.pastTenseReview + ' murid memerlukan review past tense',
-      anonymous ? 'Belum kembali belajar: ' + r.away.length + ' murid' : 'Belum kembali belajar: ' + (r.away.length ? r.away.join(', ') : '—'),
+      anonymous ? t('tac.belum-kembali', 'Belum kembali belajar:') + ' ' + r.away.length + ' murid' : t('tac.belum-kembali', 'Belum kembali belajar:') + ' ' + (r.away.length ? r.away.join(', ') : '—'),
       'Sesi review terkirim: ' + r.sessionsSent + ' · Estimasi waktu tutor yang dihemat: ±' + r.minutesSaved + ' menit',
       'Rekomendasi minggu depan: ' + r.recommendation
     ];
@@ -205,7 +210,7 @@
       '<h2>Ringkasan</h2><pre style="white-space:pre-wrap">' + esc(reportText(cls, anonymous)) + '</pre>' +
       '<h2>Peta kemampuan kelas</h2><table><tr><th>Skill</th><th>Coverage</th><th>Arti</th><th>Tindakan</th></tr>' + map.map(function (m) { return '<tr><td>' + esc(m.label) + '</td><td>' + pct(m.acc) + '</td><td>' + esc(m.meaning) + '</td><td>' + esc(m.action) + '</td></tr>'; }).join('') + '</table>' +
       '<h2>Antrian intervensi</h2><ul>' + queue.map(function (q) { return '<li><b>' + esc(q.title) + '</b> → ' + esc(q.action) + ' · ' + q.minutes + ' menit · ' + esc(q.followUp) + '</li>'; }).join('') + '</ul>' +
-      (anonymous ? '' : '<h2>Rekomendasi per murid</h2><table><tr><th>Murid</th><th>Status</th><th>Perlu review</th><th>Saran</th></tr>' + cls.students.map(function (s) { var rc = studentRecommendation(s); return '<tr><td>' + esc(s.name) + '</td><td>' + esc(rc.statusLabel) + '</td><td>' + esc(rc.review.join(', ') || '—') + '</td><td>' + esc(rc.suggestion) + '</td></tr>'; }).join('') + '</table>') +
+      (anonymous ? '' : '<h2>Rekomendasi per murid</h2><table><tr><th>' + t('umum.murid', 'Murid') + '</th><th>' + t('umum.status', 'Status') + '</th><th>Perlu review</th><th>Saran</th></tr>' + cls.students.map(function (s) { var rc = studentRecommendation(s); return '<tr><td>' + esc(s.name) + '</td><td>' + esc(rc.statusLabel) + '</td><td>' + esc(rc.review.join(', ') || '—') + '</td><td>' + esc(rc.suggestion) + '</td></tr>'; }).join('') + '</table>') +
       '</body></html>';
   }
 
@@ -215,7 +220,7 @@
       var payload = JSON.parse(decodeURIComponent(escape(atob(String(code || '').trim()))));
       if (!payload || payload.v !== 1 || !payload.skills) return null;
       var results = Object.keys(payload.skills).map(function (k) { return { skill: k, correct: Number(payload.skills[k].c) || 0, total: Number(payload.skills[k].t) || 0 }; });
-      return { id: uid('s'), name: String(payload.name || 'Murid').slice(0, 24), joinedAt: Date.now(), lastActiveAt: Number(payload.at) || Date.now(), targetDone: (payload.lessons || 0) >= 3, listening: { opened: 0, completed: 0 }, results: results, goal: payload.goal || null, cls: normalizeClassCode(payload.cls) || null };
+      return { id: uid('s'), name: String(payload.name || t('umum.murid', 'Murid')).slice(0, 24), joinedAt: Date.now(), lastActiveAt: Number(payload.at) || Date.now(), targetDone: (payload.lessons || 0) >= 3, listening: { opened: 0, completed: 0 }, results: results, goal: payload.goal || null, cls: normalizeClassCode(payload.cls) || null };
     } catch (_) { return null; }
   }
 
@@ -242,14 +247,14 @@
   function header(c) {
     return '<header class="tac-head"><div><p class="tac-kicker">Tutor Action Center</p><h1>Dari pola kesalahan ke rencana mengajar</h1><p class="tac-muted">Data jawaban murid dibaca otomatis menjadi tindakan yang jelas — bukan sekadar grafik.</p></div>' +
       '<div class="tac-class-picker">' + (st.classes.length ? '<select data-tac-select="class" data-testid="tac-class-select">' + st.classes.map(function (k) { return '<option value="' + k.id + '"' + (c && k.id === c.id ? ' selected' : '') + '>' + esc(k.name) + ' · ' + k.students.length + ' murid</option>'; }).join('') + '</select>' : '') +
-      '<button type="button" class="tac-ghost" data-tac="new-class" data-testid="tac-new-class">+ Kelas baru</button></div></header>' +
+      '<button type="button" class="tac-ghost" data-tac="new-class" data-testid="tac-new-class">' + t('tac.kelas-baru-btn', '+ Kelas baru') + '</button></div></header>' +
       (c ? '<div class="tac-classcode" data-testid="tac-class-code"><div><small>Kode kelas — murid ketik saat onboarding</small><b>' + esc(ensureClassCode(c)) + '</b></div><button type="button" class="tac-mini" data-tac="copy-code" data-testid="tac-copy-class-code">Salin kode</button><p class="tac-muted">Hasil diagnostic murid yang memakai kode ini otomatis masuk ke kelas ini.</p></div>' : '') +
       (st.creating || !st.classes.length ? createClassForm() : '');
   }
   function createClassForm() {
-    return '<form class="tac-card tac-form" data-tac-form="create-class" data-testid="tac-create-form"><h2>Buat kelas</h2><div class="tac-row"><label>Nama kelas<input name="name" required placeholder="English A2 — Kelas 10" data-testid="tac-class-name"></label>' +
+    return '<form class="tac-card tac-form" data-tac-form="create-class" data-testid="tac-create-form"><h2>' + t('tac.buat-kelas', 'Buat kelas') + '</h2><div class="tac-row"><label>' + t('tac.nama-kelas', 'Nama kelas') + '<input name="name" required placeholder="English A2 — Kelas 10" data-testid="tac-class-name"></label>' +
       '<label>Level<select name="level" data-testid="tac-class-level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option></select></label></div>' +
-      '<div class="tac-actions"><button type="submit" class="tac-primary" data-testid="tac-create-submit">Buat kelas kosong</button><button type="button" class="tac-ghost" data-tac="seed-demo" data-testid="tac-seed-demo">Muat kelas demo (English A2, 18 murid)</button>' + (st.classes.length ? '<button type="button" class="tac-ghost" data-tac="cancel-create">Batal</button>' : '') + '</div>' +
+      '<div class="tac-actions"><button type="submit" class="tac-primary" data-testid="tac-create-submit">' + t('tac.buat-kelas-kosong', 'Buat kelas kosong') + '</button><button type="button" class="tac-ghost" data-tac="seed-demo" data-testid="tac-seed-demo">Muat kelas demo (English A2, 18 murid)</button>' + (st.classes.length ? '<button type="button" class="tac-ghost" data-tac="cancel-create">' + t('umum.batal', 'Batal') + '</button>' : '') + '</div>' +
       '<p class="tac-muted">Alur: tutor membuat kelas → murid mengerjakan diagnostic → sistem membaca pola kesalahan → tutor melihat masalah utama → FIEZEL menyarankan review → tutor mengirim latihan → laporan mingguan otomatis.</p></form>';
   }
   function emptyState() { return ''; }
@@ -273,7 +278,7 @@
 
   function body(c) {
     if (snapshotWeek(c)) save(st);
-    var tabs = [['map', 'Peta kelas'], ['trend', 'Tren kelas'], ['queue', 'Antrian intervensi'], ['session', 'Buat sesi review'], ['students', 'Per murid'], ['report', 'Laporan mingguan']];
+    var tabs = [['map', 'Peta kelas'], ['trend', 'Tren kelas'], ['queue', 'Antrian intervensi'], ['session', t('tac.buat-sesi-review', 'Buat sesi review')], ['students', 'Per murid'], ['report', 'Laporan mingguan']];
     return headline(c) + '<nav class="tac-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" class="tac-tab' + (st.tab === t[0] ? ' is-active' : '') + '" data-tac="tab" data-tab="' + t[0] + '" data-testid="tac-tab-' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</nav>' +
       ({ map: mapView, trend: trendView, queue: queueView, session: sessionView, students: studentsView, report: reportView })[st.tab](c);
   }
@@ -287,7 +292,7 @@
     return '<svg class="tac-spark" viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" aria-hidden="true"><path class="tac-spark-area" d="' + area + '"/><path class="tac-spark-line" d="' + line + '"/>' + dots + '</svg>';
   }
   function trendView(c) {
-    if (!c.students.length) return '<div class="tac-card"><h2>Tren kelas</h2><p class="tac-muted">Belum ada murid — tambahkan hasil diagnostic dulu.</p></div>';
+    if (!c.students.length) return '<div class="tac-card"><h2>Tren kelas</h2><p class="tac-muted">' + t('tac.belum-murid-diagnostic', 'Belum ada murid — tambahkan hasil diagnostic dulu.') + '</p></div>';
     var rows = classWeeklyTrend(c), est = rows.some(function (r) { return r.estimate; });
     return '<div class="tac-card" data-testid="tac-trend"><h2>Tren kelas — 4 minggu terakhir</h2>' +
       '<p class="tac-muted">Arah coverage tiap skill dari minggu ke minggu. ' + (est ? 'Angka ini <b>estimasi</b> dari coverage kelas saat ini (kelas demo belum punya riwayat mingguan nyata).' : 'Berdasarkan snapshot mingguan kelas.') + '</p>' +
@@ -296,18 +301,18 @@
         return '<div class="tac-trend-card is-' + dir + '" data-testid="tac-trend-' + r.area + '"><div class="tac-trend-head"><b>' + esc(r.label) + '</b><span class="tac-trend-delta">' + arrow + ' ' + (r.delta >= 0 ? '+' : '') + r.delta + '%</span></div>' +
           sparkline(r.points) + '<div class="tac-trend-foot"><small>M1 ' + r.points[0] + '% → M' + r.points.length + ' ' + r.current + '%</small><em>' + (dir === 'up' ? 'membaik' : dir === 'down' ? 'perlu perhatian' : 'stabil') + '</em></div></div>';
       }).join('') + '</div>' +
-      '<p class="tac-muted">Skill dengan panah turun adalah prioritas: buat sesi review dari tab “Buat sesi review”.</p></div>';
+      '<p class="tac-muted">' + t('tac.panah-turun-prioritas', 'Skill dengan panah turun adalah prioritas: buat sesi review dari tab “Buat sesi review”.') + '</p></div>';
   }
 
   function headline(c) {
     var B = bank(), pt = weakStudents(c, 'past_tense'), q = interventionQueue(c)[0];
-    if (!c.students.length) return '<div class="tac-card tac-hero"><h2>Belum ada murid</h2><p class="tac-muted">Tambahkan murid dari kode hasil learner (tab Per murid) atau muat kelas demo.</p></div>';
+    if (!c.students.length) return '<div class="tac-card tac-hero"><h2>' + t('tac.belum-ada-murid', 'Belum ada murid') + '</h2><p class="tac-muted">Tambahkan murid dari kode hasil learner (tab Per murid) atau muat kelas demo.</p></div>';
     var s = pt.length >= 3 ? B.buildSession({ skills: ['past_questions', 'past_tense'], count: 10 }) : q ? B.buildSession({ skills: q.skills }) : null;
     var target = pt.length >= 3 ? 'membedakan did + verb 1 dan bentuk verb 2' : q ? B.SKILLS[q.skills[0]].objective : '';
     return '<div class="tac-card tac-hero" data-testid="tac-headline"><p class="tac-kicker">60 detik</p>' +
       '<h2>Sistem menemukan: ' + (pt.length ? pt.length + ' dari ' + c.students.length + ' murid masih salah pada past tense.' : (q ? q.title + '.' : 'belum ada pola kesalahan yang menonjol.')) + '</h2>' +
       (s ? '<p><b>FIEZEL menyarankan:</b> ' + esc(s.title) + ' · ' + s.itemIds.length + ' soal review · Durasi ' + s.minutes + ' menit · Target: ' + esc(target) + '</p>' +
-        '<div class="tac-actions"><button type="button" class="tac-primary" data-tac="quick-session" data-skills="' + s.skills.join(',') + '" data-testid="tac-quick-session">Buat sesi review</button></div>' : '') + '</div>';
+        '<div class="tac-actions"><button type="button" class="tac-primary" data-tac="quick-session" data-skills="' + s.skills.join(',') + '" data-testid="tac-quick-session">' + t('tac.buat-sesi-review', 'Buat sesi review') + '</button></div>' : '') + '</div>';
   }
 
   function mapView(c) {
@@ -325,13 +330,13 @@
     return '<div class="tac-card" data-testid="tac-queue"><h2>Antrian intervensi tutor</h2>' + (q.length ? '<ol class="tac-queue">' + q.map(function (it) {
       return '<li data-testid="tac-queue-' + it.id + '"><div class="tac-queue-main"><b>' + esc(it.title) + '</b><small>' + esc(it.names.slice(0, 6).join(', ')) + (it.names.length > 6 ? ' +' + (it.names.length - 6) : '') + '</small>' +
         '<p>→ ' + esc(it.action) + ' · Durasi: ' + it.minutes + ' menit · ' + esc(it.followUp) + '</p></div>' +
-        '<button type="button" class="tac-mini" data-tac="quick-session" data-skills="' + it.skills.join(',') + '" data-testid="tac-queue-build-' + it.id + '">Buat sesi review</button></li>';
-    }).join('') + '</ol>' : '<p class="tac-muted">Belum ada pola yang cukup kuat untuk intervensi. Tambahkan hasil diagnostic murid.</p>') + '</div>';
+        '<button type="button" class="tac-mini" data-tac="quick-session" data-skills="' + it.skills.join(',') + '" data-testid="tac-queue-build-' + it.id + '">' + t('tac.buat-sesi-review', 'Buat sesi review') + '</button></li>';
+    }).join('') + '</ol>' : '<p class="tac-muted">' + t('tac.belum-ada-pola', 'Belum ada pola yang cukup kuat untuk intervensi. Tambahkan hasil diagnostic murid.') + '</p>') + '</div>';
   }
 
   function sessionView(c) {
     var B = bank(), s = st.session;
-    return '<div class="tac-card" data-testid="tac-session-builder"><h2>Buat sesi review</h2><p class="tac-muted">Pilih masalah, sistem menyusun 5–10 soal beserta tujuan pembelajaran, estimasi durasi, urutan latihan, dan penjelasan pasca-sesi. Tidak perlu menyusun soal dari nol.</p>' +
+    return '<div class="tac-card" data-testid="tac-session-builder"><h2>' + t('tac.buat-sesi-review', 'Buat sesi review') + '</h2><p class="tac-muted">Pilih masalah, sistem menyusun 5–10 soal beserta tujuan pembelajaran, estimasi durasi, urutan latihan, dan penjelasan pasca-sesi. Tidak perlu menyusun soal dari nol.</p>' +
       '<div class="tac-picks">' + PROBLEMS.map(function (p) { return '<label class="tac-pick' + (st.picked.indexOf(p.id) !== -1 ? ' is-on' : '') + '"><input type="checkbox" data-tac-pick="' + p.id + '" data-testid="tac-pick-' + p.id + '"' + (st.picked.indexOf(p.id) !== -1 ? ' checked' : '') + '>' + esc(p.label) + '</label>'; }).join('') + '</div>' +
       '<div class="tac-actions"><button type="button" class="tac-primary" data-tac="build-session" data-testid="tac-build-session"' + (st.picked.length ? '' : ' disabled') + '>Susun sesi</button></div>' +
       (s ? sessionPreview(c, s) : '') + '</div>' +
@@ -342,9 +347,9 @@
     return '<div class="tac-session" data-testid="tac-session-preview"><h3>' + esc(s.title) + '</h3><p class="tac-muted">' + s.itemIds.length + ' soal · estimasi ' + s.minutes + ' menit</p>' +
       '<h4>Tujuan pembelajaran</h4><ul>' + s.objectives.map(function (o) { return '<li>' + esc(o.text) + '</li>'; }).join('') + '</ul>' +
       '<h4>Urutan latihan</h4><ol>' + s.order.map(function (o) { return '<li>' + esc(o.title) + ' — ' + o.count + ' soal · ' + o.minutes + ' menit</li>'; }).join('') + '</ol>' +
-      '<h4>Soal</h4><ol class="tac-items">' + s.itemIds.map(function (id) { var it = B.byId(id); return '<li>' + esc(it.prompt) + ' <small>(' + esc(it.options[it.answer]) + ')</small></li>'; }).join('') + '</ol>' +
+      '<h4>' + t('umum.soal', 'Soal') + '</h4><ol class="tac-items">' + s.itemIds.map(function (id) { var it = B.byId(id); return '<li>' + esc(it.prompt) + ' <small>(' + esc(it.options[it.answer]) + ')</small></li>'; }).join('') + '</ol>' +
       '<h4>Penjelasan & rekomendasi setelah sesi</h4><ul>' + s.afterSession.map(function (a) { return '<li>' + esc(a.text) + '</li>'; }).join('') + '</ul>' +
-      '<div class="tac-actions"><button type="button" class="tac-primary" data-tac="send-session" data-testid="tac-send-session">Kirim latihan ke kelas</button><button type="button" class="tac-ghost" data-tac="copy-session" data-testid="tac-copy-session">Salin ringkasan sesi</button></div>' +
+      '<div class="tac-actions"><button type="button" class="tac-primary" data-tac="send-session" data-testid="tac-send-session">' + t('tac.kirim-latihan', 'Kirim latihan ke kelas') + '</button><button type="button" class="tac-ghost" data-tac="copy-session" data-testid="tac-copy-session">Salin ringkasan sesi</button></div>' +
       '<p class="tac-muted">Latihan yang dikirim muncul di Today Plan murid sebagai “Latihan dari tutor”.</p></div>';
   }
 
@@ -362,9 +367,9 @@
           '<p><b>Kekuatan:</b> ' + esc(r.strengths.join(', ') || 'belum ada bukti') + ' · <b>Perlu review:</b> ' + esc(r.review.join(', ') || '—') + '</p>' +
           '<p><b>Saran:</b> ' + esc(r.suggestion) + (r.status === 'away' ? ' · terakhir aktif ' + r.inactiveDays + ' hari lalu' : '') + '</p></li>';
       }).join('') + '</ul>' : '<p class="tac-muted" data-testid="tac-students-empty">Tidak ada murid dengan status ini.</p>') + '</div>' +
-      '<form class="tac-card tac-form" data-tac-form="add-student" data-testid="tac-add-student-form"><h3>Tambah murid dari kode hasil</h3><p class="tac-muted">Murid menyalin kode dari Belajar hari ini → Ringkasan. Kode hanya berisi nama depan + akurasi per skill.</p>' +
+      '<form class="tac-card tac-form" data-tac-form="add-student" data-testid="tac-add-student-form"><h3>' + t('tac.tambah-murid-kode', 'Tambah murid dari kode hasil') + '</h3><p class="tac-muted">' + t('tac.murid-menyalin-kode', 'Murid menyalin kode dari Belajar hari ini → Ringkasan. Kode hanya berisi nama depan + akurasi per skill.') + '</p>' +
       '<textarea name="code" rows="2" placeholder="Tempel kode hasil di sini" data-testid="tac-student-code"></textarea>' +
-      '<div class="tac-actions"><button type="submit" class="tac-primary" data-testid="tac-add-student-submit">Tambah murid</button></div></form>';
+      '<div class="tac-actions"><button type="submit" class="tac-primary" data-testid="tac-add-student-submit">' + t('tac.tambah-murid', 'Tambah murid') + '</button></div></form>';
   }
 
   function reportView(c) {
@@ -372,9 +377,9 @@
     return '<div class="tac-card" data-testid="tac-report"><h2>Laporan Minggu ' + r.week + '</h2>' +
       '<div class="tac-stats"><div><b>' + r.registered + '</b><small>murid terdaftar</small></div><div><b>' + r.active + '</b><small>murid aktif</small></div><div><b>' + r.targetDone + '</b><small>menyelesaikan target</small></div><div><b>±' + r.minutesSaved + '</b><small>menit tutor dihemat</small></div></div>' +
       '<pre class="tac-report-text" data-testid="tac-report-text">' + esc(reportText(c, false)) + '</pre>' +
-      '<div class="tac-privacy"><div><h4>Boleh ditampilkan</h4><ul><li>Progress agregat</li><li>Completion & skill coverage</li><li>Pola kesalahan & rekomendasi review</li></ul></div><div><h4>Sebaiknya tidak disimpan</h4><ul><li>Raw audio</li><li>Transcript mentah</li><li>Jawaban speaking yang sensitif</li><li>Nama lengkap jika tidak diperlukan</li></ul></div></div>' +
+      '<div class="tac-privacy"><div><h4>Boleh ditampilkan</h4><ul><li>Progress agregat</li><li>Completion & skill coverage</li><li>Pola kesalahan & rekomendasi review</li></ul></div><div><h4>Sebaiknya tidak disimpan</h4><ul><li>Raw audio</li><li>Transcript mentah</li><li>' + t('tac.speaking-sensitif', 'Jawaban speaking yang sensitif') + '</li><li>' + t('tac.nama-lengkap', 'Nama lengkap jika tidak diperlukan') + '</li></ul></div></div>' +
       '<div class="tac-actions"><button type="button" class="tac-ghost" data-tac="preview" data-kind="pdf" data-testid="tac-export-pdf">Export PDF</button><button type="button" class="tac-ghost" data-tac="preview" data-kind="csv" data-testid="tac-export-csv">Export CSV</button><button type="button" class="tac-ghost" data-tac="preview" data-kind="anon" data-testid="tac-export-anon">Ringkasan anonim</button></div>' +
-      (pv ? '<div class="tac-preview" data-testid="tac-export-preview"><h4>Pratinjau sebelum dibagikan — ' + esc(pv.label) + '</h4><pre>' + esc(pv.text.length > 1800 ? pv.text.slice(0, 1800) + '\n…' : pv.text) + '</pre><div class="tac-actions"><button type="button" class="tac-primary" data-tac="confirm-export" data-testid="tac-confirm-export">' + esc(pv.cta) + '</button><button type="button" class="tac-ghost" data-tac="cancel-preview">Batal</button></div></div>' : '') + '</div>';
+      (pv ? '<div class="tac-preview" data-testid="tac-export-preview"><h4>Pratinjau sebelum dibagikan — ' + esc(pv.label) + '</h4><pre>' + esc(pv.text.length > 1800 ? pv.text.slice(0, 1800) + '\n…' : pv.text) + '</pre><div class="tac-actions"><button type="button" class="tac-primary" data-tac="confirm-export" data-testid="tac-confirm-export">' + esc(pv.cta) + '</button><button type="button" class="tac-ghost" data-tac="cancel-preview">' + t('umum.batal', 'Batal') + '</button></div></div>' : '') + '</div>';
   }
 
   // ---- events ----------------------------------------------------------------------------
@@ -430,7 +435,7 @@
     var kind = form.getAttribute('data-tac-form'), fd = new FormData(form);
     if (kind === 'create-class') {
       var k = { id: uid('cls'), code: makeClassCode(), name: String(fd.get('name') || 'Kelas baru').trim().slice(0, 40), level: String(fd.get('level') || 'A2'), createdAt: Date.now(), week: 1, students: [], sessions: [] };
-      st.classes.push(k); st.activeClassId = k.id; st.creating = false; st.tab = 'students'; toast('Kelas dibuat. Tambahkan murid dari kode hasil.');
+      st.classes.push(k); st.activeClassId = k.id; st.creating = false; st.tab = 'students'; toast(t('tac.toast-kelas-dibuat', 'Kelas dibuat. Tambahkan murid dari kode hasil.'));
     } else if (kind === 'add-student') {
       var c = cls(), s = parseLearnerCode(fd.get('code')); if (!c) return;
       if (!s) { toast('Kode hasil tidak valid.'); return; }

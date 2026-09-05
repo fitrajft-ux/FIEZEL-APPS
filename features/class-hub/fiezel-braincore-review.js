@@ -11,6 +11,11 @@
   if (root) root.FiezelBraincoreReview = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
   'use strict';
+
+  /* m025-265 · sapuan kebocoran Thai: naskah di berkas ini dulu literal Indonesia,
+     jadi murid yang memilih th tetap membacanya dalam bahasa Indonesia. t() fail-soft:
+     kalau copy-map belum termuat, fallback id-lah yang tampil. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
   var LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   var SKILL_LABEL = { past_tense: 'Past tense', past_questions: 'Past questions', vocab_a2: 'Vocabulary A2', listening_detail: 'Listening detail', reading_inference: 'Reading inference', grammar: 'Grammar', vocabulary: 'Vocabulary', reading: 'Reading', listening: 'Listening', speaking: 'Speaking' };
   var SKILL_DOMAIN = { past_tense: 'grammar', past_questions: 'grammar', vocab_a2: 'vocabulary', listening_detail: 'listening', reading_inference: 'reading', grammar: 'grammar', vocabulary: 'vocabulary', reading: 'reading', listening: 'listening', speaking: 'speaking' };
@@ -230,10 +235,10 @@
   /** assignmentStatus({deadline}, {done, startedAt}, todayStr) -> 'selesai'|'terlambat'|'sedang'|'belum' + late flag */
   function assignmentStatus(a, rec, todayStr) {
     var late = !!(a && a.deadline && todayStr && a.deadline < todayStr);
-    if (rec && rec.done) { var doneDay = rec.done.at ? new Date(rec.done.at).toISOString().slice(0, 10) : todayStr; return { id: 'selesai', label: 'Selesai', late: !!(a && a.deadline && doneDay > a.deadline) }; }
+    if (rec && rec.done) { var doneDay = rec.done.at ? new Date(rec.done.at).toISOString().slice(0, 10) : todayStr; return { id: 'selesai', label: t('kelas.status-selesai', 'Selesai'), late: !!(a && a.deadline && doneDay > a.deadline) }; }
     if (late) return { id: 'terlambat', label: 'Terlambat', late: true };
     if (rec && rec.startedAt) return { id: 'sedang', label: 'Sedang mengerjakan', late: false };
-    return { id: 'belum', label: 'Belum mulai', late: false };
+    return { id: 'belum', label: t('kelas.status-belum-mulai', 'Belum mulai'), late: false };
   }
   function daysLeft(deadline, todayStr) { if (!deadline) return null; var d = new Date(deadline + 'T00:00:00'), t = new Date((todayStr || new Date().toISOString().slice(0, 10)) + 'T00:00:00'); return Math.round((d - t) / 86400000); }
 

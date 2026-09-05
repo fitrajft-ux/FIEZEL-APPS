@@ -125,7 +125,11 @@ test('wiring: tab Kelas → classHubView; notifikasi tugas membuka Kelas; tutor 
   assert.ok(app.includes("hub.mountStudent(host,{go,toast:showToast") && app.includes('openTutor:()=>tutorClassroomWrapper()'), 'tutor bersuara tetap dapat dibuka dari hub');
   assert.ok(app.includes("self.FiezelClassHub.openAssignment(e.aid)") && app.includes("go('classroom');return true"), 'notif tugas → Kelas');
   const shell = read('features/teacher/fiezel-teacher-shell.js');
-  assert.ok(/\['hub', 'Kelas', 'school'\]/.test(shell) && /FiezelClassHub\.mountTeacher\(hubEl/.test(shell), 'Ruang Guru memasang hub');
+  /* m025-265: label nav Ruang Guru kini lewat t('umum.kelas') supaya murid/guru th tidak
+     membaca 'Kelas'. Yang dijaga gerbang ini tetap sama persis — entri nav 'hub' dengan
+     ikon 'school' dan pemasangan mountTeacher — hanya bentuk labelnya yang tidak lagi
+     dibekukan sebagai literal Indonesia. */
+  assert.ok(/\['hub',[^\]]*'school'\]/.test(shell) && /FiezelClassHub\.mountTeacher\(hubEl/.test(shell), 'Ruang Guru memasang hub');
   assert.ok(/st\.view = 'hub'; st\.hubSeen = true/.test(shell), 'hub landing default sekali');
   const html = read('index.html');
   ['features/class-hub/fiezel-braincore-review.js', 'features/class-hub/fiezel-class-hub.js', 'features/class-hub/class-hub.css'].forEach((f) => assert.ok(html.includes(f), f + ' dimuat'));

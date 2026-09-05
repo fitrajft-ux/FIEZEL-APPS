@@ -9,6 +9,9 @@
   if (root) root.FiezelTeacherStore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
+
+  /* m025-265 · sapuan kebocoran Thai: naskah modul ini dulu literal Indonesia. */
+  function t(k, fb) { try { var I = (typeof self !== 'undefined' ? self : this).FiezelI18n; return I && I.t ? I.t(k) : fb; } catch (_) { return fb; } }
   var root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
   var KEY = 'fiezel-teacher-v1';
   var ASSIGN_KEY = 'fiezel-learner-assignments-v1';
@@ -24,7 +27,7 @@
   function b64d(str) { return JSON.parse(decodeURIComponent(escape(atob(String(str || '').trim())))); }
   function makeClassCode() { var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', out = ''; for (var i = 0; i < 6; i++) out += A[Math.floor(Math.random() * A.length)]; return 'FZ-' + out; }
   function normalizeClassCode(v) { v = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (v.indexOf('FZ') === 0) v = v.slice(2); return v.length === 6 ? 'FZ-' + v : ''; }
-  function firstName(n) { return String(n || 'Murid').trim().split(/\s+/)[0].slice(0, 24); }
+  function firstName(n) { return String(n || t('umum.murid', 'Murid')).trim().split(/\s+/)[0].slice(0, 24); }
 
   // ---- persist -------------------------------------------------------------------------
   function defaults() { return { schema: KEY, teacher: { name: '', school: '' }, classes: [], activeClassId: null, view: 'briefing', savedMinutes: 0, inbox: [], createdAt: Date.now() }; }
@@ -106,7 +109,7 @@
     var weak = weakestSkill(s), action;
     if (d != null && d >= 7) action = 'Kirim Kartu Sapa hari ini — sapaan personal, bukan tagihan tugas.';
     else if (late.length) action = 'Ingatkan tugas “' + late[0].a.title + '” lewat pesan singkat + tawarkan waktu tambahan.';
-    else if (weak && weak.acc < 0.5) action = 'Beri 5 soal ' + SKILL_LABEL[weak.skill] + ' dengan pendamping teman (lihat Kelompok Belajar).';
+    else if (weak && weak.acc < 0.5) action = 'Beri 5 soal ' + SKILL_LABEL[weak.skill] + ' ' + t('guru.pendamping-teman', 'dengan pendamping teman (lihat Kelompok Belajar).');
     else if (level === 'pantau') action = 'Sapa 1 kalimat apresiasi supaya momentumnya tidak putus.';
     else action = 'Pertahankan — beri tantangan kecil satu level di atas.';
     return { score: score, level: level, reasons: reasons, action: action, weak: weak, pending: pend.length, late: late.length, inactiveDays: d };
@@ -239,8 +242,8 @@
     if (w) lines.push('• Perlu latihan: ' + SKILL_LABEL[w.skill] + ' (' + pct(w.acc) + ')');
     if (att != null) lines.push('• Kehadiran 10 pertemuan terakhir: ' + Math.round(att * 100) + '%');
     lines.push('• Terakhir belajar mandiri: ' + (s.lastActiveAt ? fmtDate(s.lastActiveAt) : 'belum tercatat'));
-    if (pend.length) lines.push('• Tugas belum selesai: ' + pend.map(function (p) { return p.a.title; }).join(', '));
-    lines.push('', 'Yang bisa dibantu di rumah: tanyakan 1 kalimat Bahasa Inggris tentang kegiatan ' + s.name + ' kemarin (melatih ' + (w ? SKILL_LABEL[w.skill] : 'ingatan') + '). Cukup 5 menit.', '', 'Terima kasih atas kerja samanya 🙏', (teacher && teacher.name) || 'Guru Bahasa Inggris', (teacher && teacher.school) || '');
+    if (pend.length) lines.push(t('guru.tugas-belum-selesai', '• Tugas belum selesai:') + ' ' + pend.map(function (p) { return p.a.title; }).join(', '));
+    lines.push('', 'Yang bisa dibantu di rumah: tanyakan 1 kalimat Bahasa Inggris tentang kegiatan ' + s.name + ' kemarin (melatih ' + (w ? SKILL_LABEL[w.skill] : 'ingatan') + '). Cukup 5 menit.', '', 'Terima kasih atas kerja samanya 🙏', (teacher && teacher.name) || t('guru.tanda-tangan', 'Guru Bahasa Inggris'), (teacher && teacher.school) || '');
     return lines.join('\n').trim();
   }
   function weeklyClassReport(c, teacher) {

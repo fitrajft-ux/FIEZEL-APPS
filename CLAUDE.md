@@ -23,4 +23,16 @@ pre-authorized the following so Claude can work without stopping to ask each tim
   `vendor/kokoro-js/kokoro.web.js` hash-lock tests, which fail even on a clean `main` checkout
   in this environment) don't block — confirm via `git diff main -- <path>` that the file is
   untouched before treating a failure as pre-existing.
+- **Setiap teks yang dilihat pengguna lahir DUA BAHASA — Indonesia dan Thai.** FIEZEL punya
+  murid Thai; teks yang hanya ditulis dalam Indonesia sampai ke mereka sebagai layar
+  berbahasa campur, bukan sebagai teks yang hilang. Jadi: jangan pernah menulis kalimat
+  langsung di `app.js` atau modul fitur. Daftarkan lewat pasangan
+  `features/i18n/copy-id-<domain>.js` + `features/i18n/copy-th-<domain>.js` (kunci sama
+  persis, `{placeholder}` sama persis, nilai th ber-aksara Thai), lalu panggil dengan
+  `FiezelI18n.t('<kunci>')`. Domain baru cukup dibuat sebagai pasangan berkas —
+  `tests/th-coverage-test.js` menemukannya sendiri dari isi direktori dan langsung menuntut
+  kembarannya; tidak ada daftar yang perlu disunting. Kalau terjemahan Thai-nya belum bisa
+  ditulis, catat sebagai utang bertanggal di `UTANG_TANPA_TH` / `UTANG_KUNCI` di gerbang itu
+  dan sebutkan di laporanmu — jangan diam-diam mengirim kunci tanpa th. Latar lengkapnya di
+  `docs/handoffs/I18N-TH-PARITY-HANDOFF.md`.
 - Owner reports should stay short in chat; put detail in the PR description, not the chat reply.
