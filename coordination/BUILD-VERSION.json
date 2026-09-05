@@ -1,7 +1,7 @@
 {
-  "version": "m025-266",
-  "claimedBy": "branch claude/th-ui-leak-sweep-dlz1d4",
-  "claimedAt": "2026-09-05T22:20:00.928Z",
-  "reason": "Sapuan kebocoran naskah Indonesia di mode Thai",
+  "version": "m025-267",
+  "claimedBy": "branch fix/class-runner-picture",
+  "claimedAt": "2026-09-05T23:00:00.000Z",
+  "reason": "Runner kelas tidak pernah mencetak gambar soal, jadi soal kosakata bergambar mustahil dijawab murid",
   "protocol": "Jangan pernah mengetik nomor build langsung ke sw.js, core-config.js, atau fiezel-diag-panel.js. Jalankan `node tools/bump-build.mjs \"<alasan singkat>\"`. Ia mengambil versi dari origin/main, menaikkan satu, lalu menulis KEEMPAT tempat sekaligus. Kalau dua sesi menaikkan bersamaan, konfliknya jatuh di berkas 8 baris ini - bukan di sw.js atau style.css."
 }
